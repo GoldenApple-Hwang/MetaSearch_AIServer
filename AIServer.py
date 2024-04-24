@@ -160,7 +160,7 @@ def upload_delete_image():
 
             # 웹 서버에게 변경된 csv 파일 전송
             if endIndicator == 'true':
-                #send_webServer(csv_file_path)
+                send_neo4jServer(csv_file_path)
                 print("마지막 요청")
 
 
@@ -188,9 +188,9 @@ def delete_csv_file_info(csv_file_path,filename):
 
 
 # 웹 서버에 csv 전송
-def send_webServer(csv_file_path):
+def send_neo4jServer(csv_file_path):
     web_url = 'http://113.198.85.4/aiserver/uploadcsv'  # Node.js 서버의 엔드포인트
-    files = {'file': open(csv_file_path, 'rb')}  # 'example.csv'는 전송하고자 하는 파일명
+    files = {'csvfile': open(csv_file_path, 'rb')}  # 'example.csv'는 전송하고자 하는 파일명
     response = requests.post(web_url, files=files) # node.js에 파일 전송
     print(response.text)  # 서버의 응답 출력
 
