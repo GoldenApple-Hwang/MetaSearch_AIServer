@@ -187,7 +187,7 @@ def delete_csv_file_info(csv_file_path,filename):
         csv_dataframe.to_csv(csv_file_path,index=False)
 
 
-# 웹 서버에 csv 전송
+# neo4j 서버에 csv 전송
 def send_neo4jServer(csv_file_path):
     web_url = 'http://113.198.85.4/aiserver/uploadcsv'  # Node.js 서버의 엔드포인트
     files = {'csvfile': open(csv_file_path, 'rb')}  # 'example.csv'는 전송하고자 하는 파일명
