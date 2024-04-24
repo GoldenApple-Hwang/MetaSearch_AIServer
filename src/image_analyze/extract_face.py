@@ -101,7 +101,10 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                 shutil.move(face_path, new_path)
                 extract_person = new_path #사람 이미지 이름
                 print("뽑은 사람 이름 : "+ extract_person)
-                #face_path = new_path
+
+                # 얼굴을 새로 뽑을 시에 리스트에 추가함
+                extractFaceList.append(extract_person)
+
 
             else: # 찾은 얼굴이 있는 경우
                 print("얼굴을 찾았습니다.")
@@ -113,9 +116,6 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
 
                 extract_person = face_result[0]['identity'][0] # 사람 이미지 이름
                 print("뽑은 사람 이름 : "+ extract_person)
-
-            #삭제할 얼굴 사진 이름 리스트에 추가 
-            extractFaceList.append(extract_person)  # 경로를 줘야 json에서 해당 경로를 타고 바이트 배열을 반환할 수 있음
             
             compare_expression_Face(csv_link,extract_person,image_name,extract_person_list,extract_person_emotion_list) # 표정 분석
             
