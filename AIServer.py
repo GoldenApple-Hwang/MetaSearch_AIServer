@@ -8,6 +8,7 @@ import pandas as pd
 #from image_anaylze import * 
 from image_analyze.extract_face import compareFace
 from image_analyze.lastGVapiLockVersion import image_analysis
+from metadata.extract_metadata import meta_run
 #from image_anaylze import extract_face
 #from image_anaylze import lastGVapiLockVersion
 #from extract_face import compareFace
@@ -15,7 +16,7 @@ from image_analyze.lastGVapiLockVersion import image_analysis
 import csv
 import threading
 from functools import wraps
-from metadata import meta_run
+#from metadata import meta_run
 import json
 from circle2search import detect_and_draw_objects_in_radius
 import requests
@@ -34,6 +35,22 @@ def synchronized(lock):
                 return func(*args, **kwargs)
         return wrapper
     return decorator
+
+@app.route('/android/upload_finish', methods=['POST'])
+def upload_finish():
+    source, endIndicator = request_info(request)
+    FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
+    app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
+    csv_directory = os.path.join(app.config['UPLOAD_FOLDER'],"CSV")
+
+    csv_file_path = os.path.join(csv_directory, FOLDER_NAME+".csv")
+
+    send_neo4jServer(csv_file_path)
+    return 'Database image upload 완료', 200 
+
+
+
+
 
 @app.route('/android/upload_add', methods=['POST'])
 #@synchronized(lock)
@@ -116,7 +133,6 @@ def upload_image():
             
             # 마지막 요청 웹 서버에 변경된 csv 파일 전송
             if endIndicator == 'true':
-                #send_webServer(csv_file_path)
                 print("마지막 요청")
 
             response = make_image_json(extract_face_list,"add",isFaceExit)
@@ -129,7 +145,6 @@ def upload_image():
 @app.route('/android/upload_delete', methods=['POST'])
 #@synchronized(lock)
 def upload_delete_image():
-    
     source, endIndicator = request_info(request)
     FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
@@ -223,14 +238,11 @@ def request_csv_neo4jServer(database,csv_file_path):
         #서버로부터 받은 CSV 파일 저장
         with open(csv_file_path, 'wb') as file:
             file.write(response.content)
-        print('Successfully saved the CSV file.')
+            print('Successfully saved the CSV file.')
         return True
     else:
         print('Failed to receive the CSV file.')
         return False
-
-
-
 
 
 # neo4j 서버에 csv 전송
