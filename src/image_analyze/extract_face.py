@@ -8,13 +8,15 @@ import shutil # 이미지 경로 변경을 위해 사용
 from deepface import DeepFace
 import dlib
 from datetime import datetime 
-
+import threading
 # db_link : 서버 내 유효 DB 경로
 # app_image_lick : 앱 내의 이미지 경로
 # db_image_link : 서버 내 처리 이미지 링크
 # csv_link : csv 파일 경로
 
 #얼굴 추출 / #compareFace에서 호출함
+
+lock = threading.Lock()
 
 #얼굴 분석 csv 파일 작성
 def compareFace(db_link,app_image_link,db_image_link,csv_link): 
@@ -30,7 +32,6 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
      #날짜+시간으로 얼굴 이름 지정 
      current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
  
-     
       
      # 비교할 얼굴 이미지가 존재하는 폴더
      face_db_path = db_link+'/faces'
@@ -101,10 +102,7 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                 shutil.move(face_path, new_path)
                 extract_person = new_path #사람 이미지 이름
                 print("뽑은 사람 이름 : "+ extract_person)
-
-                # 얼굴을 새로 뽑을 시에 리스트에 추가함
-                extractFaceList.append(extract_person)
-
+                #face_path = new_path
 
             else: # 찾은 얼굴이 있는 경우
                 print("얼굴을 찾았습니다.")
@@ -116,18 +114,15 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
 
                 extract_person = face_result[0]['identity'][0] # 사람 이미지 이름
                 print("뽑은 사람 이름 : "+ extract_person)
+
+            #삭제할 얼굴 사진 이름 리스트에 추가 
+            extractFaceList.append(extract_person)  # 경로를 줘야 json에서 해당 경로를 타고 바이트 배열을 반환할 수 있음
             
             compare_expression_Face(csv_link,extract_person,image_name,extract_person_list,extract_person_emotion_list) # 표정 분석
             
         except ValueError as E:
             print("deepface에서 얼굴 분석 못 함")
-            #temp에 있는 얼굴 삭제
-            print("temp에 저장되어있는 얼굴 삭제 시도하려함")
-            if face_path: 
-                print("temp에 있는 이미지의 경로 : "+face_path)
-                os.remove(face_path) # temp에 이미지가 존재하면 해당 이미지 삭제함
-            print("temp에 있는 얼굴 삭제함")
-
+            
      #얼굴 추출 리스트를 반환함
      return extractFaceList 
 # 표정 분석 및 csv 파일 작성
@@ -137,61 +132,65 @@ def compare_expression_Face(csv_link,extract_person,image_name,extract_person_li
         csv_file = open(csv_link,'a',newline='') #csv 행 추가하기
         csv_writer = csv.writer(csv_file)
 
+        try:
 
-        # 해당 얼굴 사진 표정 분석
-        emotion_result = DeepFace.analyze(img_path=extract_person,
-                            actions=['emotion', 'gender', 'race'],
-                            detector_backend='retinaface') # 얼굴 표정 분석
+            # 해당 얼굴 사진 표정 분석
+            emotion_result = DeepFace.analyze(img_path=extract_person,
+                                actions=['emotion', 'gender', 'race'],
+                                detector_backend='retinaface') # 얼굴 표정 분석
 
-        print("emotion_result : ")
-        print(emotion_result)
-        # 얼굴에서 뽑힌 감정, 성별, 인종 추출      
-        for face_data in emotion_result:
-            # 감정 추출
-            extract_emotion = face_data['dominant_emotion']
+            print("emotion_result : ")
+            print(emotion_result)
+            # 얼굴에서 뽑힌 감정, 성별, 인종 추출      
+            for face_data in emotion_result:
+                # 감정 추출
+                extract_emotion = face_data['dominant_emotion']
 
-            # 성별 추출
-            extract_gender = face_data['dominant_gender']
+                # 성별 추출
+                extract_gender = face_data['dominant_gender']
 
-            # 인종 추출
-            extract_race = face_data['dominant_race']
-
-
-        # 인물 추출 
-        #os.path.basename(...) -> 사진 이름만 추출함 => face_1.jpg
-        extract_person  = os.path.basename(extract_person)
-        # 파일 이름에서 확장자를 제거한 부분 => face_1
-        extract_person = os.path.splitext(extract_person)[0]
+                # 인종 추출
+                extract_race = face_data['dominant_race']
 
 
-        if(extract_person in extract_person_list): #만약 이미 인물 리스트에 추출한 얼굴 이미지 이름이 존재한다면
-            pass # 패스
-                #이미 이름이 존재한다는 것은 트리플에 적혀있다는 것이므로 새로 csv에 적지 않도록 한다.
-        else:
-                extract_person_list.append(extract_person) # 인물 리스트에 추출한 얼굴 이미지 이름이 존재하지 않는다면
-                # 인물 리스트에 존재하지 않는다는 것은 아직 트리플에 적히지 않았다는 것이므로 트리플에 새로 적어줌                   
-                 # csv에 작성
-                Entity1 = image_name
-                Relationship='인물'
-                Entity2 = extract_person
-                csv_writer.writerow([Entity1, Relationship, Entity2])
+            # 인물 추출 
+            #os.path.basename(...) -> 사진 이름만 추출함 => face_1.jpg
+            extract_person  = os.path.basename(extract_person)
+            # 파일 이름에서 확장자를 제거한 부분 => face_1
+            extract_person = os.path.splitext(extract_person)[0]
 
-                Entity1 = image_name
-                Relationship=extract_person+"의 성별"
-                Entity2 = extract_gender
-                csv_writer.writerow([Entity1, Relationship, Entity2]) 
 
-                Entity1 = image_name
-                Relationship=extract_person+"의 인종"
-                Entity2 = extract_race
-                csv_writer.writerow([Entity1, Relationship, Entity2]) 
+            if(extract_person in extract_person_list): #만약 이미 인물 리스트에 추출한 얼굴 이미지 이름이 존재한다면
+                pass # 패스
+                    #이미 이름이 존재한다는 것은 트리플에 적혀있다는 것이므로 새로 csv에 적지 않도록 한다.
+            else:
+                    extract_person_list.append(extract_person) # 인물 리스트에 추출한 얼굴 이미지 이름이 존재하지 않는다면
+                    # 인물 리스트에 존재하지 않는다는 것은 아직 트리플에 적히지 않았다는 것이므로 트리플에 새로 적어줌                   
+                    # csv에 작성
+                    # 추출한 얼굴에 대한 인물 작성
+                    write_csv(csv_writer,image_name,'인물',extract_person)
+                
+                    #추출한 성별에 대해 작성
+                    write_csv(csv_writer,image_name,extract_person+'의 성별',extract_gender)
+                    #Entity1 = image_name
+                    #Relationship=extract_person+"의 성별"
+                    #Entity2 = change_en_to_kor(extract_gender) # 영어를 한국어로 변경
+                    #csv_writer.writerow([Entity1, Relationship, Entity2]) 
 
-        isExist_emotion = check_if_emotion_exists(extract_person_emotion_list,extract_person,extract_emotion)
-        if not isExist_emotion: # 만약 해당 감정이 존재하지 않는다면 추출해준다.
-            Entity1 = image_name
-            Relationship = extract_person+"의 감정"
-            Entity2 = extract_emotion
-            csv_writer.writerow([Entity1, Relationship, Entity2])
+                    #추출한 인종 작성
+                    write_csv(csv_writer,image_name,extract_person+'의 인종',extract_race)
+
+            # 이미 해당 인물에게서 추출한 감정인지 체크함
+            isExist_emotion = check_if_emotion_exists(extract_person_emotion_list,extract_person,extract_emotion)
+            if not isExist_emotion: # 만약 해당 감정이 존재하지 않는다면 추출해준다.
+                write_csv(csv_writer,image_name,extract_person+'의 감정',extract_emotion)
+                #Entity1 = image_name
+                #Relationship = extract_person+"의 감정"
+                #Entity2 = change_en_to_kor(extract_emotion) #영어를 한국어로 변경
+                #csv_writer.writerow([Entity1, Relationship, Entity2])
+
+        except ValueError as E:
+            print("deepface에서 표정 분석 못 함")
 
 
 # 해당 인물에 대해서 같은 emotion이 이미 있는지 확인
@@ -199,3 +198,20 @@ def check_if_emotion_exists(emotion_list, key, emotion):
     return any(item[1] == emotion for item in emotion_list if item[0] == key)
 
 
+#csv 파일에 작성
+def write_csv(csv_writer,entity1, relationship, entity2):
+    global lock
+    with lock:
+        Entity1 = entity1
+        Relationship = relationship
+        Entity2 = change_en_to_kor(entity2)
+        csv_writer.writerow([Entity1, Relationship, Entity2])
+
+    
+#영어를 한국어로 반환함
+def change_en_to_kor(en):
+    kor = {"netural" : "보통", "happy": "행복함", "surprise" : "놀람","angry":"화남","disgust":"역겨움","fear":"공포","sad":"슬픔", #감정
+               "indian":"인도인","black":"백인","white":"백인","middle eastern":"중동인","latino hispanic":"라틴계인","asian":"아시아인", #인종
+               "woman":"여자","man":"남자" #성별
+               }.get(en)
+    return kor
