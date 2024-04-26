@@ -38,7 +38,7 @@ def synchronized(lock):
 
 @app.route('/android/upload_finish', methods=['POST'])
 def upload_finish():
-    source, endIndicator = request_info(request)
+    source = request_info(request)
     FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
     csv_directory = os.path.join(app.config['UPLOAD_FOLDER'],"CSV")
@@ -49,13 +49,10 @@ def upload_finish():
     return 'Database image upload 완료', 200 
 
 
-
-
-
 @app.route('/android/upload_add', methods=['POST'])
 #@synchronized(lock)
 def upload_image():
-    source, endIndicator = request_info(request)
+    source = request_info(request)
     FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
 
@@ -100,8 +97,6 @@ def upload_image():
                 csv_writer = csv.writer(csv_file)
                 csv_writer.writerow(["Entity1", "Relationship", "Entity2"])  # 헤더 추가
 
-
-
     if 'addImage' in request.files: # 추가된 이미지에 대한 분석 요청
         #print('image로 뽑힌 것 ')
         print("add에 들어옴")
@@ -128,13 +123,6 @@ def upload_image():
             if extract_face_list: #추출된 얼굴이 있을 경우, isExit 
                 isFaceExit = True
 
-
-            print("endIndicator는 : ",endIndicator)
-            
-            # 마지막 요청 웹 서버에 변경된 csv 파일 전송
-            if endIndicator == 'true':
-                print("마지막 요청")
-
             response = make_image_json(extract_face_list,"add",isFaceExit)
             return jsonify(response), 200
                 
@@ -145,7 +133,7 @@ def upload_image():
 @app.route('/android/upload_delete', methods=['POST'])
 #@synchronized(lock)
 def upload_delete_image():
-    source, endIndicator = request_info(request)
+    source = request_info(request)
     FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
 
@@ -190,10 +178,10 @@ def upload_delete_image():
             # 해당 이름이 들어간 데이터를 csv 파일에서 삭제함
             delete_csv_file_info(csv_file_path,filename) 
 
-            # 웹 서버에게 변경된 csv 파일 전송
-            if endIndicator == 'true':
-                send_neo4jServer(csv_file_path)
-                print("마지막 요청")
+            # # 웹 서버에게 변경된 csv 파일 전송
+            # if endIndicator == 'true':
+            #     send_neo4jServer(csv_file_path)
+            #     print("마지막 요청")
 
 
             if extract_face_list: #추출된 얼굴이 있을 경우, isExit 
@@ -236,7 +224,7 @@ def request_csv_neo4jServer(database,csv_file_path):
     #서버 응답 확인
     if response.status_code == 200:
         #서버로부터 받은 CSV 파일 저장
-        with open(csv_file_path, 'wb') as file:
+        with open(csv_file_path, "wb") as file:
             file.write(response.content)
             print('Successfully saved the CSV file.')
         return True
@@ -257,7 +245,7 @@ def send_neo4jServer(csv_file_path):
 @app.route('/android/upload_database', methods=['POST'])
 #@synchronized(lock)
 def upload_database_image():
-    source,endIndicator = request_info(request)
+    source = request_info(request)
 
     FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
@@ -338,9 +326,7 @@ def allowed_file(filename):
 
 def request_info(request): #request 제공하는 info 추출
     source = request.form.get('source') #DB 이름
-    endIndicator = request.form.get('endIndicator')
-
-    return source, endIndicator
+    return source
 
 
 # db폴더 경로 내 gallery 폴더 생성 + 해당 이미지 저장    
