@@ -222,5 +222,5 @@ def change_en_to_kor(en):
     kor = {"netural" : "보통", "happy": "행복함", "surprise" : "놀람","angry":"화남","disgust":"역겨움","fear":"공포","sad":"슬픔", #감정
                "indian":"인도인","black":"백인","white":"백인","middle eastern":"중동인","latino hispanic":"라틴계인","asian":"아시아인", #인종
                "woman":"여자","man":"남자" #성별
-               }.get(en,"알 수 없음")
+               }.get(en,en)
     return kor
