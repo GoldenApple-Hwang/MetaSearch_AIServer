@@ -123,6 +123,11 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
             # 표정 분석까지 끝낸 얼굴을 extractFaceList에 추가함
             if expression_analyze_face!=None:
                 extractFaceList.append(expression_analyze_face)
+            else: 
+                # face에 저장되어있는 사진 삭제 필요
+                os.remove(extract_person)
+                print("표정 분석 안 된 사진은 삭제함")
+
 
 
         except ValueError as E:
