@@ -116,10 +116,15 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                 print("뽑은 사람 이름 : "+ extract_person)
 
             #삭제할 얼굴 사진 이름 리스트에 추가 
-            extractFaceList.append(extract_person)  # 경로를 줘야 json에서 해당 경로를 타고 바이트 배열을 반환할 수 있음
+            #extractFaceList.append(extract_person)  # 경로를 줘야 json에서 해당 경로를 타고 바이트 배열을 반환할 수 있음
             
-            compare_expression_Face(csv_link,extract_person,image_name,extract_person_list,extract_person_emotion_list) # 표정 분석
+            expression_analyze_face = compare_expression_Face(csv_link,extract_person,image_name,extract_person_list,extract_person_emotion_list) # 표정 분석
             
+            # 표정 분석까지 끝낸 얼굴을 extractFaceList에 추가함
+            if expression_analyze_face!=None:
+                extractFaceList.append(expression_analyze_face)
+
+
         except ValueError as E:
             print("deepface에서 얼굴 분석 못 함")
             
@@ -127,17 +132,19 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
      return extractFaceList 
 # 표정 분석 및 csv 파일 작성
 def compare_expression_Face(csv_link,extract_person,image_name,extract_person_list,extract_person_emotion_list): #csv 파일 경로, 추출된 사람의 얼굴 이미지 이름, 분석된 사진의 이름
-       
+        expression_analyze_face = None
         #csv 파일 열기
         csv_file = open(csv_link,'a',newline='') #csv 행 추가하기
         csv_writer = csv.writer(csv_file)
 
         try:
-
             # 해당 얼굴 사진 표정 분석
             emotion_result = DeepFace.analyze(img_path=extract_person,
                                 actions=['emotion', 'gender', 'race'],
                                 detector_backend='retinaface') # 얼굴 표정 분석
+            
+            expression_analyze_face = extract_person
+
 
             print("emotion_result : ")
             print(emotion_result)
@@ -191,6 +198,8 @@ def compare_expression_Face(csv_link,extract_person,image_name,extract_person_li
 
         except ValueError as E:
             print("deepface에서 표정 분석 못 함")
+
+        return expression_analyze_face
 
 
 # 해당 인물에 대해서 같은 emotion이 이미 있는지 확인
