@@ -4,8 +4,7 @@ from werkzeug.utils import secure_filename
 from io import BytesIO
 import base64
 from PIL import Image
-import pandas as pd
-#from image_anaylze import * 
+import pandas as pd 
 from image_analyze.extract_face import compareFace
 from image_analyze.GVapi import image_analysis
 from metadata.extract_metadata import meta_run
