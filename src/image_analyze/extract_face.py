@@ -33,12 +33,14 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
      #각각의 인물에 대해서 감정의 값을 저장 ex) [[1,happy],[1,netural],[2,happy]]
      extract_person_emotion_list = [] 
 
-     # 표정 분석 해야하는 얼굴 리스트
+     # 표정 분석 해야하는 얼굴 이미지 리스트
      expression_faces = []
 
-     extract_person='' #추출할 인물에 대한 변수
+     #추출할 인물에 대한 변수
+     extract_person='' 
 
-     extractFaceList = [] #추출된 얼굴들을 저장하는 리스트 #반환
+     #새로 추출된 얼굴들을 저장하는 리스트 #반환되는 리스트
+     extractFaceList = [] 
 
      image_name = app_image_link # 분석되고 있는 이미지 이름
      image_name_exclude_extension = os.path.splitext(app_image_link)[0] #추출된 얼굴 이미지에 분석된 이미지의 이름을 추가하기 위한 변수
@@ -48,23 +50,29 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
      #날짜+시간으로 얼굴 이름 지정 
      current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
  
-      
      # 비교할 얼굴 이미지가 존재하는 폴더
      face_db_path = db_link+'/faces'
-     # faces가 빈 파일이면 에러 발생함 -> 나중에 수정 필요 
 
      # 인식된 이미지 폴더
      temp_db_path = db_link+'/temp'
 
      #face 폴더가 없는지 확인 + face_db_path가 비어있는지 확인 필요 -> 만약 비어있다면 item을 찾을 수 없다는 에러가 뜨면서 얼굴 비교가 불가능해짐
      if not os.path.exists(face_db_path):
+
+        # faces 폴더 생성함
         os.makedirs(face_db_path)
+
+        # 만약 faces 폴더 새로 생성할 경우, test.jpg를 추가함
         test_image_path = "./test.jpg"
+
+        # test.jpg를 faces 폴더에 복사함
         shutil.copy(test_image_path,face_db_path)
         print("face 폴더 만듦 + test 이미지 복사함")
     
      # temp 폴더가 없는지 확인
      if not os.path.exists(temp_db_path):
+         
+         # temp 폴더가 없으면 새로 만듦
          os.makedirs(temp_db_path)
          print("temp 폴더 만듦")
           
@@ -95,6 +103,7 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
 
             width = r - l
             height = b - t
+            # 사진을 해당 영역으로 자름
             l = max(int(l - 0.4 * width), 0)
             t = max(int(t - 0.4 * height), 0)
             r = min(int(r + 0.4 * width), img.shape[1])
@@ -118,7 +127,7 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                     if (len(face_result)==0 or face_result[0].empty):
                         print("얼굴을 찾지 못했습니다.")
 
-                        # face 폴더로 이동
+                        # faces 폴더로 이동
                         new_path = face_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
 
                         # 이미지 파일을 temp에서 faces 다른 폴더로 이동
@@ -152,7 +161,7 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
 
                         extract_person = face_result[0]['identity'][0] # 사람 이미지 이름
 
-                        # 키: 새로운 얼굴 값: 동일하다고 비교된 얼굴
+                        # 키: 새로운 얼굴 이미지 이름, 값: 동일하다고 비교된 얼굴 이미지 이름
                         compare_extract_person_name[face_path] = extract_person
                         print("뽑은 사람 이름 : "+ extract_person)
                     
@@ -176,25 +185,23 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
 
                     # 처음 추출되는 얼굴을 반환할 추출 얼구 리스트에 포함
                     if new_extract_person!='':
-                        extractFaceList.append(new_extract_person)    
-
-                    # 표정 분석 시도
-                    #compare_expression_Face(csv_link,extract_person,image_name,extract_person_name_list,extract_person_emotion_list,extract_person_sex_dict) # 표정 분석
-            
-
-                    # 뽑은 얼굴 리스트에 추가
+                        extractFaceList.append(new_extract_person)                
                 
             except ValueError as E:
                 print("deepface에서 얼굴 분석 못 함")
 
      
-     # 표정 분석해야하는 얼굴 리스트가 비어있지 않는 경우
+     # 표정 분석해야하는 얼굴 리스트가 비어있지 않는 경우 -> openCV에서 추출한 얼굴이 있는 경우
      if expression_faces:
+
+        # 표정 분석 얼굴 리스트 순회
         for expression_face in expression_faces:
+
             # 새롭게 뽑힌 얼굴일 경우, 비교되는 얼굴이 동일하고, 기존의 얼굴과 동일하다고 나온 얼굴은 표정 분석되는 얼굴과 csv에 적혀야하는 얼굴 이름이 다르므로 체크함
             if expression_face in compare_extract_person_name.keys():
                 same_face_person_name = compare_extract_person_name[expression_face]
             else:
+                # 비교할 만한 얼굴이 없는 경우, 해당 얼굴 이미지 이름이 '인물'이 됨
                 same_face_person_name = expression_face
             
             # 이미지 이름만 추출
@@ -261,12 +268,14 @@ def compare_expression_Face(csv_link,expression_face,same_face_person_name,image
 def check_if_emotion_exists(emotion_list, key, emotion):
     return any(item[1] == emotion for item in emotion_list if item[0] == key)
 
+
 # 해당 인물에 대해서 성별이 있는지 확인
 def check_if_sex_exist(extract_person_key,extract_person_sex_dict):
     if extract_person_key in extract_person_sex_dict.keys():
         return True
     else:
         return False
+
 
 #csv 파일에 작성
 def write_csv(csv_link,entity1, relationship, entity2):
@@ -281,7 +290,7 @@ def write_csv(csv_link,entity1, relationship, entity2):
         Entity2 = change_en_to_kor(entity2)
         csv_writer.writerow([Entity1, Relationship, Entity2])
 
-    
+
 #영어를 한국어로 반환함
 def change_en_to_kor(en):
     kor = {"netural" : "보통", "happy": "행복함", "surprise" : "놀람","angry":"화남","disgust":"역겨움","fear":"공포","sad":"슬픔", #감정
