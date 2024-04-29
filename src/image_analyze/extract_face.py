@@ -16,7 +16,10 @@ import threading
 
 #얼굴 추출 / #compareFace에서 호출함
 
+# csv 파일 lock
 lock = threading.Lock()
+
+# 얼굴 분석 lock
 face_lock = threading.Lock()
 
 #얼굴 분석 csv 파일 작성
@@ -152,9 +155,6 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                         # temp에 존재하는 얼굴 사진
                         expression_faces.append(face_path)
 
-                        # temp 폴더에 저장했던 이미지 삭제
-                        #os.remove(face_path) 
-
                         # 찾은 얼굴에 대한 인물을 추출
                         # 여러 개로 찾은 경우, 첫 번째의 얼굴로 결정
                         #result[0]['identity'][0] -> 동일하다고 나온 이미지의 링크 전체를 알려줌 ex) ./faces/...
@@ -165,7 +165,6 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                         compare_extract_person_name[face_path] = extract_person
                         print("뽑은 사람 이름 : "+ extract_person)
                     
-
                     # 인물 추출 
                     #os.path.basename(...) -> 사진 이름만 추출함 => face_1.jpg
                     extract_person  = os.path.basename(extract_person)
@@ -185,8 +184,9 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
 
                     # 처음 추출되는 얼굴을 반환할 추출 얼구 리스트에 포함
                     if new_extract_person!='':
-                        extractFaceList.append(new_extract_person)                
-                
+                        extractFaceList.append(new_extract_person)    
+
+            # 예외처리
             except ValueError as E:
                 print("deepface에서 얼굴 분석 못 함")
 
@@ -209,17 +209,15 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
                 # 파일 이름에서 확장자를 제거한 부분 => face_1
             same_face_person_name = os.path.splitext(same_face_person_name)[0]
                 
+            # 표정 분석 함수 호출
             compare_expression_Face(csv_link,expression_face,same_face_person_name,image_name,extract_person_emotion_list,extract_person_sex_dict)
 
-        
      #얼굴 추출 리스트를 반환함
      return extractFaceList 
 
+
 # 표정 분석 및 csv 파일 작성
 def compare_expression_Face(csv_link,expression_face,same_face_person_name,image_name,extract_person_emotion_list,extract_person_sex_dict): #csv 파일 경로, 추출된 사람의 얼굴 이미지 이름, 분석된 사진의 이름
-        # #csv 파일 열기
-        # csv_file = open(csv_link,'a',newline='') #csv 행 추가하기
-        # csv_writer = csv.writer(csv_file)
 
         try:
             # 해당 얼굴 사진 표정 분석
@@ -229,6 +227,7 @@ def compare_expression_Face(csv_link,expression_face,same_face_person_name,image
 
             print("emotion_result : ")
             print(emotion_result)
+
             # 얼굴에서 뽑힌 감정, 성별, 인종 추출      
             for face_data in emotion_result:
                 # 감정 추출
@@ -240,26 +239,33 @@ def compare_expression_Face(csv_link,expression_face,same_face_person_name,image
                 # 인종 추출
                 extract_race = face_data['dominant_race']
 
-
+            # 해당 인물에 대해서 성별을 추출한 적 있는지 확인하는 함수 호출
             isExist_Sex = check_if_sex_exist(same_face_person_name,extract_person_sex_dict)
+
+            # 해당 인물에 대해서 성별을 추출한 적이 없다면
             if not isExist_Sex:
                 # 인물 리스트에 존재하지 않는다는 것은 아직 트리플에 적히지 않았다는 것이므로 트리플에 새로 적어줌                   
-                # csv에 작성
-                    
-                #추출한 성별에 대해 작성
+
+                #추출한 성별에 대해 csv 작성
                 write_csv(csv_link,image_name,'성별',extract_gender)
-                # 성별 추가
+
+                # 딕셔너리에 해당 인물에 대한 성별 추가(인물의 이름 :key , 성별 : value)
                 extract_person_sex_dict[same_face_person_name] = extract_gender
                     
-                #추출한 인종 작성
+                #추출한 인종 csv에 작성
                 write_csv(csv_link,image_name,'인종',extract_race)
 
                     
             # 이미 해당 인물에게서 추출한 감정인지 체크함
             isExist_emotion = check_if_emotion_exists(extract_person_emotion_list,same_face_person_name,extract_emotion)
-            if not isExist_emotion: # 만약 해당 감정이 존재하지 않는다면 추출해준다.
+
+            # 만약 해당 감정이 존재하지 않는다면 추출해준다.
+            if not isExist_emotion:
+
+                # 추출된 감정 csv에 작성
                 write_csv(csv_link,image_name,'감정',extract_emotion)
             
+        # 예외처리
         except ValueError as E:
             print("deepface에서 표정 분석 못 함")
 
@@ -280,6 +286,7 @@ def check_if_sex_exist(extract_person_key,extract_person_sex_dict):
 #csv 파일에 작성
 def write_csv(csv_link,entity1, relationship, entity2):
     global lock
+
     #csv 파일 열기
     csv_file = open(csv_link,'a',newline='') #csv 행 추가하기
     csv_writer = csv.writer(csv_file)
@@ -287,7 +294,11 @@ def write_csv(csv_link,entity1, relationship, entity2):
     with lock:
         Entity1 = entity1
         Relationship = relationship
+       
+        # 매개변수로 들어온 entity2를 한국어 번역시킴
         Entity2 = change_en_to_kor(entity2)
+
+        # csv에 한 행 작성
         csv_writer.writerow([Entity1, Relationship, Entity2])
 
 
@@ -296,5 +307,7 @@ def change_en_to_kor(en):
     kor = {"netural" : "보통", "happy": "행복함", "surprise" : "놀람","angry":"화남","disgust":"역겨움","fear":"공포","sad":"슬픔", #감정
                "indian":"인도인","black":"백인","white":"백인","middle eastern":"중동인","latino hispanic":"라틴계인","asian":"아시아인", #인종
                "woman":"여자","man":"남자" #성별
-               }.get(en,en)
+               }.get(en,en) # 만약 이 중에 없는 값이 들어오면 이 값을 반환함
+    
+    # 한국어로 변형한 값 반환함
     return kor
