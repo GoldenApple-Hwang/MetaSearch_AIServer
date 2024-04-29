@@ -38,6 +38,7 @@ def synchronized(lock):
 
 @app.route('/android/upload_finish', methods=['POST'])
 def upload_finish():
+    print("마지막 요청 들어옴")
     source = request_info(request)
     FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
@@ -45,7 +46,12 @@ def upload_finish():
 
     csv_file_path = os.path.join(csv_directory, FOLDER_NAME+".csv")
 
+    # 최종 csv파일 neo4j 전송
     send_neo4jServer(csv_file_path)
+
+    # 사용자의 폴더 내 csv, faces, temp, gallery 모두 비워야함
+
+
     return 'Database image upload 완료', 200 
 
 
@@ -304,7 +310,7 @@ def upload_database_image():
     
 
 #원 그리기 요청
-@app.route('/upload', methods=['POST'])
+@app.route('/android/circle_search', methods=['POST'])
 def upload_file():
     if 'searchImage' not in request.files:
         return jsonify({'error': 'No image part'}), 400
