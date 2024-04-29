@@ -11,14 +11,9 @@ from image_analyze.lastGVapiLockVersion import image_analysis
 from metadata.extract_metadata import meta_run
 import serverConnectionHandler
 import csvHandler
-#from image_anaylze import extract_face
-#from image_anaylze import lastGVapiLockVersion
-#from extract_face import compareFace
-#from lastGVapiLockVersion import image_analysis
 import csv
 import threading
 from functools import wraps
-#from metadata import meta_run
 import json
 from circle2search import detect_and_draw_objects_in_radius
 import requests
@@ -57,10 +52,7 @@ def upload_finish():
     # 최종 csv파일 neo4j 전송
     serverConnectionHandler.send_neo4jServer(csv_file_path)
 
-    # 사용자의 폴더 내 csv, faces, temp, gallery 모두 비워야함
-    # faces 경로 -> ./FOLDER_NAME/faces
-    # temp 경로 -> ./FOLDER_NAME/temp
-    # gallery 경로 -> ./FOLDER_NAME/gallery
+    # 사용자의 폴더 내 csv, faces, temp, gallery 모두 비움
 
     # faces 폴더 경로
     faces_directory = os.path.join(app.config['UPLOAD_FOLDER'],"faces")
@@ -227,12 +219,7 @@ def upload_delete_image():
             with lock:
                 csvHandler.delete_csv_file_info(csv_file_path,filename) 
 
-            # # 웹 서버에게 변경된 csv 파일 전송
-            # if endIndicator == 'true':
-            #     send_neo4jServer(csv_file_path)
-            #     print("마지막 요청")
-
-            #추출된 얼굴이 있을 경우, isExit
+            #추출된 얼굴이 있을 경우, isExit = True
             if extract_face_list:  
                 isFaceExit = True
 
@@ -244,58 +231,6 @@ def upload_delete_image():
 
         else:
             'No file part', 400
-
-
-
-# def isExitCSV(FOLDER_NAME,csv_file_path):
-#     #csv_file_path에 파일 없으면
-#     if not os.path.exists(csv_file_path):
-#         print(f"파일이 존재하지 않습니다. {csv_file_path}")
-#         # neo4j 서버에 요청
-#         isCSVFile = serverConnectionHandler.request_csv_neo4jServer(FOLDER_NAME,csv_file_path) 
-#         # 요청했는데 없으면 새로 만듦
-#         # isCSVFile false;
-#         if not isCSVFile: # neo4j 서버에서 csv 파일을 가져오지 못한다면 
-#             with lock:  # Lock을 획득하여 해당 블록을 동기화
-#                 with open(csv_file_path, 'w', newline='') as csv_file:  # 새 파일 생성
-#                     csv_writer = csv.writer(csv_file)
-#                     csv_writer.writerow(["Entity1", "Relationship", "Entity2"])  # 헤더 추가
-#         # isCSVFile ture면 요청하여 받아온 것
-
-
-
-# #neo4j 서버에 csv 요청
-# def request_csv_neo4jServer(database,csv_file_path):
-#     # 저장되어야하는 csv 파일 경로
-#     #csv_path = f'./{database}/CSV/' 
-
-#     #neo4j 서버의 url
-#     neo4j_url = f'http://113.198.85.4/neo4jserver/csv'
-
-#     # 전송할 데이터베이스 이름
-#     database_name = {'dbName':database}
-
-#     #JSON 형태로 데이터베이스 이름을 POST 방식으로 전송
-#     response = requests.post(neo4j_url,json=database_name)
-
-#     #서버 응답 확인
-#     if response.status_code == 200:
-#         #서버로부터 받은 CSV 파일 저장
-#         with open(csv_file_path, "wb") as file:
-#             file.write(response.content)
-#             print('Successfully saved the CSV file.')
-#         return True
-#     else:
-#         print('Failed to receive the CSV file.')
-#         return False
-
-
-# # neo4j 서버에 csv 전송
-# def send_neo4jServer(csv_file_path):
-#     neo4j_url = 'http://113.198.85.4/aiserver/uploadcsv'  # Node.js 서버의 엔드포인트
-#     files = {'csvfile': open(csv_file_path, 'rb')}  # 'example.csv'는 전송하고자 하는 파일명
-#     response = requests.post(neo4j_url, files=files) # node.js에 파일 전송
-#     print(response.text)  # 서버의 응답 출력
 
 
 # 데이터베이스 이미지 요청
