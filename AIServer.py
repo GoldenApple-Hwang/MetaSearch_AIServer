@@ -83,41 +83,6 @@ def upload_image():
     #csv 파일 저장 경로, 파일 이름
     csv_file_path = os.path.join(csv_directory, FOLDER_NAME+".csv")
 
-   #request_csv_neo4jServer(FOLDER_NAME) # neo4j 서버에 csv 파일 요청
-
-    # # 현재 csv_file_path에 해당 csv 파일이 존재하지 않는 경우,
-    # if not os.path.exists(csv_file_path):
-    #      with lock:  # Lock을 획득하여 해당 블록을 동기화
-    #         with open(csv_file_path, 'w', newline='') as csv_file:  # 새 파일 생성
-    #             csv_writer = csv.writer(csv_file)
-    #             csv_writer.writerow(["Entity1", "Relationship", "Entity2"])  # 헤더 추가
-    # else: 
-    #     # csv_file_path에 해당 csv 파일이 존재하는 경우
-
-    # neo4j 서버에 csv 파일 요청 및 저장   
-
-    #일단 csv 폴더에 없으면 요청
-    # 요청했는데 없으면 새로 만듦
-    # 있으면 저장
-    # csv 폴더에 있으면 요청 x
-
-    #일단 csv 파일이 없다면 요청
-
-    # 파일 존재 여부 확인
-    # 파일에 존재하지 않는 경우,
-    # if not os.path.exists(csv_file_path):
-    #     print(f"파일이 존재하지 않습니다. {csv_file_path}")
-    #     # neo4j 서버에 요청
-    #     isCSVFile = request_csv_neo4jServer(FOLDER_NAME,csv_file_path) 
-    #     # 요청했는데 없으면 새로 만듦
-    #     # isCSVFile false;
-    #     if not isCSVFile: # neo4j 서버에서 csv 파일을 가져오지 못한다면 
-    #         with lock:  # Lock을 획득하여 해당 블록을 동기화
-    #             with open(csv_file_path, 'w', newline='') as csv_file:  # 새 파일 생성
-    #                 csv_writer = csv.writer(csv_file)
-    #                 csv_writer.writerow(["Entity1", "Relationship", "Entity2"])  # 헤더 추가
-    #     # isCSVFile ture면 요청하여 받아온 것
-
     # csv 파일이 csv_file_path에 존재하는지 확인하고, 없으면 neo4j에 요청, 요청 시 false이면 서버에서 새로 생성
     isExitCSV(FOLDER_NAME,csv_file_path)
             
