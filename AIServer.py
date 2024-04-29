@@ -9,6 +9,7 @@ import pandas as pd
 from image_analyze.extract_face import compareFace
 from image_analyze.lastGVapiLockVersion import image_analysis
 from metadata.extract_metadata import meta_run
+import serverConnectionHandler
 #from image_anaylze import extract_face
 #from image_anaylze import lastGVapiLockVersion
 #from extract_face import compareFace
@@ -36,6 +37,7 @@ def synchronized(lock):
         return wrapper
     return decorator
 
+
 @app.route('/android/upload_finish', methods=['POST'])
 def upload_finish():
     print("마지막 요청 들어옴")
@@ -47,7 +49,7 @@ def upload_finish():
     csv_file_path = os.path.join(csv_directory, FOLDER_NAME+".csv")
 
     # 최종 csv파일 neo4j 전송
-    send_neo4jServer(csv_file_path)
+    serverConnectionHandler.send_neo4jServer(csv_file_path)
 
     # 사용자의 폴더 내 csv, faces, temp, gallery 모두 비워야함
 
@@ -204,7 +206,7 @@ def isExitCSV(FOLDER_NAME,csv_file_path):
     if not os.path.exists(csv_file_path):
         print(f"파일이 존재하지 않습니다. {csv_file_path}")
         # neo4j 서버에 요청
-        isCSVFile = request_csv_neo4jServer(FOLDER_NAME,csv_file_path) 
+        isCSVFile = serverConnectionHandler.request_csv_neo4jServer(FOLDER_NAME,csv_file_path) 
         # 요청했는데 없으면 새로 만듦
         # isCSVFile false;
         if not isCSVFile: # neo4j 서버에서 csv 파일을 가져오지 못한다면 
@@ -216,38 +218,38 @@ def isExitCSV(FOLDER_NAME,csv_file_path):
 
 
 
-#neo4j 서버에 csv 요청
-def request_csv_neo4jServer(database,csv_file_path):
-    # 저장되어야하는 csv 파일 경로
-    #csv_path = f'./{database}/CSV/' 
+# #neo4j 서버에 csv 요청
+# def request_csv_neo4jServer(database,csv_file_path):
+#     # 저장되어야하는 csv 파일 경로
+#     #csv_path = f'./{database}/CSV/' 
 
-    #neo4j 서버의 url
-    neo4j_url = f'http://113.198.85.4/neo4jserver/csv'
+#     #neo4j 서버의 url
+#     neo4j_url = f'http://113.198.85.4/neo4jserver/csv'
 
-    # 전송할 데이터베이스 이름
-    database_name = {'dbName':database}
+#     # 전송할 데이터베이스 이름
+#     database_name = {'dbName':database}
 
-    #JSON 형태로 데이터베이스 이름을 POST 방식으로 전송
-    response = requests.post(neo4j_url,json=database_name)
+#     #JSON 형태로 데이터베이스 이름을 POST 방식으로 전송
+#     response = requests.post(neo4j_url,json=database_name)
 
-    #서버 응답 확인
-    if response.status_code == 200:
-        #서버로부터 받은 CSV 파일 저장
-        with open(csv_file_path, "wb") as file:
-            file.write(response.content)
-            print('Successfully saved the CSV file.')
-        return True
-    else:
-        print('Failed to receive the CSV file.')
-        return False
+#     #서버 응답 확인
+#     if response.status_code == 200:
+#         #서버로부터 받은 CSV 파일 저장
+#         with open(csv_file_path, "wb") as file:
+#             file.write(response.content)
+#             print('Successfully saved the CSV file.')
+#         return True
+#     else:
+#         print('Failed to receive the CSV file.')
+#         return False
 
 
-# neo4j 서버에 csv 전송
-def send_neo4jServer(csv_file_path):
-    neo4j_url = 'http://113.198.85.4/aiserver/uploadcsv'  # Node.js 서버의 엔드포인트
-    files = {'csvfile': open(csv_file_path, 'rb')}  # 'example.csv'는 전송하고자 하는 파일명
-    response = requests.post(neo4j_url, files=files) # node.js에 파일 전송
-    print(response.text)  # 서버의 응답 출력
+# # neo4j 서버에 csv 전송
+# def send_neo4jServer(csv_file_path):
+#     neo4j_url = 'http://113.198.85.4/aiserver/uploadcsv'  # Node.js 서버의 엔드포인트
+#     files = {'csvfile': open(csv_file_path, 'rb')}  # 'example.csv'는 전송하고자 하는 파일명
+#     response = requests.post(neo4j_url, files=files) # node.js에 파일 전송
+#     print(response.text)  # 서버의 응답 출력
 
 
 # 데이터베이스 이미지 요청
