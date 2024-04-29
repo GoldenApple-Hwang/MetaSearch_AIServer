@@ -1,19 +1,18 @@
 import serverConnectionHandler
 import csv
 import pandas as pd
+import os
 
-# csv 파일에 파일이름 들어간 행 삭제
+# csv 파일에 파일이름 들어간 행 삭제하는 함수
 def delete_csv_file_info(csv_file_path,filename):
-    global lock
-    with lock:
-        #csv 파일을 dataframe으로 불러옴
-        csv_dataframe = pd.read_csv(csv_file_path)
+    #csv 파일을 dataframe으로 불러옴
+    csv_dataframe = pd.read_csv(csv_file_path)
 
-        #'Entity1' 컬럼에서 filename과 같은 값을 가진 행을 모두 삭제
-        csv_dataframe = csv_dataframe[csv_dataframe['Entity1'] != filename]
+    #'Entity1' 컬럼에서 filename과 같은 값을 가진 행을 모두 삭제
+    csv_dataframe = csv_dataframe[csv_dataframe['Entity1'] != filename]
 
-        #변경된 DataFrame을 다시 CSV 파일로 저장
-        csv_dataframe.to_csv(csv_file_path,index=False)
+    #변경된 DataFrame을 다시 CSV 파일로 저장
+    csv_dataframe.to_csv(csv_file_path,index=False)
 
 
 # 해당 경로에 csv 파일이 존재하는지 확인하는 함수
