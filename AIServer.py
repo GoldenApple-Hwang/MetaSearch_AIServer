@@ -7,7 +7,7 @@ from PIL import Image
 import pandas as pd
 #from image_anaylze import * 
 from image_analyze.extract_face import compareFace
-from image_analyze.lastGVapiLockVersion import image_analysis
+from image_analyze.GVapi import image_analysis
 from metadata.extract_metadata import meta_run
 import serverConnectionHandler
 import csvHandler
