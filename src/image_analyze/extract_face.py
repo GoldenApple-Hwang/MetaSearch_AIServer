@@ -240,18 +240,18 @@ def compare_expression_Face(csv_link,expression_face,same_face_person_name,image
                 # csv에 작성
                     
                 #추출한 성별에 대해 작성
-                write_csv(csv_link,image_name,same_face_person_name+'의 성별',extract_gender)
+                write_csv(csv_link,image_name,'성별',extract_gender)
                 # 성별 추가
                 extract_person_sex_dict[same_face_person_name] = extract_gender
                     
                 #추출한 인종 작성
-                write_csv(csv_link,image_name,same_face_person_name+'의 인종',extract_race)
+                write_csv(csv_link,image_name,'인종',extract_race)
 
                     
             # 이미 해당 인물에게서 추출한 감정인지 체크함
             isExist_emotion = check_if_emotion_exists(extract_person_emotion_list,same_face_person_name,extract_emotion)
             if not isExist_emotion: # 만약 해당 감정이 존재하지 않는다면 추출해준다.
-                write_csv(csv_link,image_name,same_face_person_name+'의 감정',extract_emotion)
+                write_csv(csv_link,image_name,'감정',extract_emotion)
             
         except ValueError as E:
             print("deepface에서 표정 분석 못 함")
