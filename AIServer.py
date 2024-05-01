@@ -177,7 +177,7 @@ def upload_delete_image():
         file = request.files['deleteImage']
 
         if file:
-            filename = secure_filename(file.filename) # 파일 이름 보안 검증
+            filename = file.filename # 파일 이름 보안 검증
             print("deleteImage에서의 filename : "+filename)
 
             #얼굴 이미지가 저장되어있는 폴더
@@ -252,7 +252,7 @@ def upload_database_image():
 
         # 파일이 존재하는지 확인
         if file: 
-            filename = secure_filename(file.filename)
+            filename = file.filename
 
             # 파일 저장 경로 설정
             save_path = make_save_path_folder(file,app.config['UPLOAD_FOLDER'], "faces", filename)
