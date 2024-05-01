@@ -124,7 +124,7 @@ def upload_image():
             if file.filename == '' or not allowed_file(file.filename):
                 return 'No selected file or invalid file format', 400
             else :
-                filename = secure_filename(file.filename)  # 파일 이름 보안 검증
+                filename = file.filename  # 파일 이름 보안 검증
 
             # db 폴더 내 이미지 저장 폴더 존재 x 경우 폴더 생성 + 해당 폴더에 이미지 저장
             save_path = make_save_path_folder(file,app.config['UPLOAD_FOLDER'], 'gallery', filename)
