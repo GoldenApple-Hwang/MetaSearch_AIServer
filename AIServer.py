@@ -190,7 +190,9 @@ def upload_delete_image():
                 os.makedirs(directory)
 
             #추출된 얼굴 이미지에 분석된 이미지의 이름을 추가하기 위한 변수
-            search_name = os.path.splitext(filename)[0] 
+            # 파일 이름에서 확장자를 제거한 부분 => face_1      
+            search_name = os.path.basename(search_name)
+            search_name = os.path.splitext(search_name)[0]
             print("검색하고자 하는 이미지 이름 : "+search_name)
 
             # faces 폴더 내의 모든 파일 순회
