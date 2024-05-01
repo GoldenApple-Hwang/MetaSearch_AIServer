@@ -13,6 +13,7 @@ import threading
 # app_image_lick : 앱 내의 이미지 경로
 # db_image_link : 서버 내 처리 이미지 링크
 # csv_link : csv 파일 경로
+# faces_detected : 인식된 얼굴 영역
 
 #얼굴 추출 / #compareFace에서 호출함
 
@@ -23,7 +24,7 @@ lock = threading.Lock()
 face_lock = threading.Lock()
 
 #얼굴 분석 csv 파일 작성
-def compareFace(db_link,app_image_link,db_image_link,csv_link): 
+def compareFace(db_link,app_image_link,db_image_link,csv_link,faces_detected): 
      # csv 파일에 작성해야하는 인물 리스트
      extract_person_name_list = []
 
@@ -96,24 +97,12 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link):
     
      # 인식된 얼굴의 개수만큼 반복
      with face_lock:
-        for idx,dlib_rect in enumerate(dlib_rects):
-            new_extract_person = '' #처음으로 추출한 인물
-            # 인식된 얼굴 영역의 0.5만큼 추출
-            l = dlib_rect.left()
-            t = dlib_rect.top()
-            r = dlib_rect.right()
-            b = dlib_rect.bottom()
+        for face in faces_detected:
+            vertices = [(vertex.x,vertex.y) for vertex in face.bouding_poly.vertices]
+            x1,y1 = vertices[0]
+            x2,y2 = vertices[2]
 
-            width = r - l
-            height = b - t
-            # 사진을 해당 영역으로 자름
-            l = max(int(l - 0.4 * width), 0)
-            t = max(int(t - 0.4 * height), 0)
-            r = min(int(r + 0.4 * width), img.shape[1])
-            b = min(int(b + 0.4 * height), img.shape[0]) 
-
-            # 얼굴 부분만 잘라내기 / 자른 얼굴 temp에 임시 저장
-            cropped = img[t:b, l:r]
+            cropped = img[y1:y2,x1:x2]
 
             #temp 폴더에 임시 저장
             face_path = temp_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
