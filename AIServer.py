@@ -78,16 +78,16 @@ def upload_finish():
             # csv에서 해당 faceImage 이름으로 된 곳을 다 변경함
             newFaceName = f'인물{rowCount}'
 
-            #  (newfaces 폴더 내에서) 파일 이름 변경을 위해 전체 경로 지정 #faceImage는 old 이름 
-            newFaces_oldFilePath = os.path.join(newFaces_directory, faceImage)
-            newFaces_newFilePath = os.path.join(newFaces_directory, f'인물{rowCount}')
+            # #  (newfaces 폴더 내에서) 파일 이름 변경을 위해 전체 경로 지정 #faceImage는 old 이름 
+            newFaces_filePath = os.path.join(newFaces_directory, faceImage)
+            # newFaces_newFilePath = os.path.join(newFaces_directory, f'인물{rowCount}')
 
             # (faces 폴더 내에서) 파일 이름 변경을 위해 전체 경로 지정
             faces_oldFilePath = os.path.join(faces_directory,faceImage)
             faces_newFilePath = os.path.join(faces_directory,f'인물{rowCount}')
             
-            # 파일 이름 변경
-            os.rename(newFaces_oldFilePath, newFaces_newFilePath)
+            # # 파일 이름 변경
+            # os.rename(newFaces_oldFilePath, newFaces_newFilePath)
 
             # 파일 이름 변경
             os.rename(faces_oldFilePath, faces_newFilePath)
@@ -100,7 +100,7 @@ def upload_finish():
             csvHandler.replace_names_in_csv_pandas(csv_file_path,base_face_name,newFaceName)
 
              # 해당 얼굴 이미지 파일 읽음
-            with open(newFaces_newFilePath, "rb") as img_file:
+            with open(newFaces_filePath, "rb") as img_file:
                     image_bytes = img_file.read()
                     encoded_image = base64.b64encode(image_bytes).decode('utf-8')  # 바이트 배열을 base64로 인코딩하여 문자열로 변환
 
