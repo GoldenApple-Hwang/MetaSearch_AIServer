@@ -443,10 +443,12 @@ def allowed_file(filename):
 
 #request 제공하는 info 추출
 def request_info(request): 
-
+    rowCount = None
     #DB 이름
-    source = request.form.get('source') 
-    return source
+    dbName = request.form.get('dbName') 
+    if request.form.get('rowCount'):
+        rowCount = request.form.get('rowCount')
+    return dbName,rowCount
 
 
 # db폴더 경로 내 gallery 폴더 생성 + 해당 이미지 저장    
