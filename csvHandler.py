@@ -15,6 +15,18 @@ def delete_csv_file_info(csv_file_path,filename):
     csv_dataframe.to_csv(csv_file_path,index=False)
 
 
+# csv 파일 '인물' 속성에 대한 속성값 변경
+def replace_names_in_csv_pandas(csv_file_path, old_name, new_name):
+    # CSV 파일 읽기
+    df = pd.read_csv(csv_file_path, encoding='utf-8')
+    
+    # 데이터프레임 내에서 old_name을 new_name으로 변경
+    df.replace(old_name, new_name, inplace=True)
+    
+    # 변경된 데이터프레임을 CSV 파일로 다시 쓰기
+    df.to_csv(csv_file_path, index=False, encoding='utf-8')
+
+
 # 해당 경로에 csv 파일이 존재하는지 확인하는 함수
 def isExitCSV(FOLDER_NAME,csv_file_path):
 
