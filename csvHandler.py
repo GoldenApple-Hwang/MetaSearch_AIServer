@@ -15,6 +15,22 @@ def delete_csv_file_info(csv_file_path,filename):
     csv_dataframe.to_csv(csv_file_path,index=False)
 
 
+# CSV 파일에서 특정 조건을 만족하는 행을 삭제하기 전에 추가 조건 확인하고 해당 값을 반환하는 함수
+# 인물 속성이 존재하면 해당 속성값을 반환한다.
+def return_entity2_if_relationship_is_person(csv_file_path, filename):
+    # CSV 파일을 DataFrame으로 로드
+    csv_dataframe = pd.read_csv(csv_file_path)
+    
+    # 'Entity1'이 filename이고 'Relationship'이 "인물"인 행 찾기
+    condition = (csv_dataframe['Entity1'] == filename) & (csv_dataframe['Relationship'] == "인물")
+    
+    # 조건을 만족하는 'Entity2'의 값들을 리스트로 저장
+    entity2_values_if_person = csv_dataframe[condition]['Entity2'].tolist()
+    
+    # 조건을 만족하는 'Entity2'의 값을 반환
+    return entity2_values_if_person
+
+
 # csv 파일 '인물' 속성에 대한 속성값 변경
 def replace_names_in_csv_pandas(csv_file_path, old_name, new_name):
     # CSV 파일 읽기
