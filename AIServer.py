@@ -228,15 +228,17 @@ def upload_image():
 @app.route('/android/upload_delete', methods=['POST'])
 #@synchronized(lock)
 def upload_delete_image():
-    source = request_info(request)
-    FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
+    dbName,rowCount = request_info(request)
+    FOLDER_NAME = dbName # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
 
     #추출된 얼굴 이미지 경로를 담는 리스트
-    extract_face_list = [] 
+    #extract_face_list = [] 
 
     #추출된 얼굴 이미지가 있었는지 판단
     isFaceExit = False 
+
+    images_response = []
 
     # csv 경로 생성
     csv_directory = os.path.join(app.config['UPLOAD_FOLDER'],"CSV") 
@@ -257,57 +259,65 @@ def upload_delete_image():
             print("deleteImage에서의 filename : "+filename)
 
             #얼굴 이미지가 저장되어있는 폴더
-            directory = os.path.join(app.config['UPLOAD_FOLDER'],"faces") 
+            face_directory = os.path.join(app.config['UPLOAD_FOLDER'],"faces") 
 
-            # faces 폴더가 없는 경우
-            if not os.path.exists(directory): 
+            # #추출된 얼굴 이미지에 분석된 이미지의 이름을 추가하기 위한 변수
+            # # 파일 이름에서 확장자를 제거한 부분 => face_1      
+            # search_name = os.path.basename(search_name)
+            # search_name = os.path.splitext(search_name)[0]
+            # print("검색하고자 하는 이미지 이름 : "+search_name)
 
-                #폴더 생성
-                os.makedirs(directory)
+            # 해당 이미지 속성에 인물이 있다면 entity2를 추출한 리스트
+            person_face_list = csvHandler.return_entity2_if_relationship_is_person(csv_file_path, filename)
 
-            #추출된 얼굴 이미지에 분석된 이미지의 이름을 추가하기 위한 변수
-            # 파일 이름에서 확장자를 제거한 부분 => face_1      
-            search_name = os.path.basename(search_name)
-            search_name = os.path.splitext(search_name)[0]
-            print("검색하고자 하는 이미지 이름 : "+search_name)
+            # 추출된 얼굴이 있었다면
+            if person_face_list:
+                isFaceExit = True
+                if os.path.exists(face_directory):
+                # faces 폴더 내의 모든 파일 순회
+                    for imageName in os.listdir(face_directory):
+                        print("imageName : "+imageName)
 
-            # faces 폴더 내의 모든 파일 순회
-            for imageName in os.listdir(directory):
-                print("imageName : "+imageName)
+                        # 찾고자 하는 이미지의 경로
+                        image_path = os.path.join(face_directory, imageName)
+                        print("iamge_path :"+image_path)
 
-                # 찾고자 하는 이미지의 경로
-                image_path = os.path.join(directory, imageName)
-                print("iamge_path :"+image_path)
+                        # 얼굴 이미지가 entity2 추출한 리스트의 이름 내에 있다면
+                        if imageName in person_face_list:
 
-                # 이미지 이름에 삭제된 이미지 이름이 포함되어있다면
-                if search_name in imageName:
+                            # 추출 얼굴 리스트에 삭제해야하는 얼굴 이미지 이름 추가
+                            #extract_face_list.append(imageName) 
 
-                    # 추출 얼굴 리스트에 삭제해야하는 얼굴 이미지 이름 추가
-                    extract_face_list.append(imageName) 
-                    
-                    # 이미지 삭제
-                    os.remove(image_path)
-                    print(f"Found '{search_name}' in file: {imageName}")
+                            images_response.append({
+                                # 이미지 이름
+                                'imageName': imageName,
 
-                    #찾으면 종료함
-                    break 
+                                # 얼굴 추출 여부
+                                'isFaceExit' : isFaceExit
+                            })
+                            
+                            # 이미지 삭제
+                            os.remove(image_path)
+                            print(f"Found '{imageName}'")   
                     
             # 해당 이름이 들어간 데이터를 csv 파일에서 삭제함
             with lock:
                 csvHandler.delete_csv_file_info(csv_file_path,filename) 
-
-            #추출된 얼굴이 있을 경우, isExit = True
-            if extract_face_list:  
-                isFaceExit = True
-
+            
             # 응답을 위한 json 작성
-            response = make_image_json(extract_face_list,"delete",isFaceExit)
+            #response = make_image_json(extract_face_list,"delete",isFaceExit)
+
+            # 응답 response 생성
+            response = {
+                'images': images_response
+            }
 
             #json 응답 전송
             return jsonify(response), 200 
 
         else:
             'No file part', 400
+
 
 
 # 데이터베이스 이미지 요청
