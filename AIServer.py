@@ -151,6 +151,23 @@ def upload_finish():
     
     return jsonify(response), 200
 
+@app.route('/android/upload_first', methods=['POST'])
+def upload_first():
+    dbName,rowCount = request_info(request)
+    # 만들어야하는 폴더 이름 ex) People
+    FOLDER_NAME = dbName
+
+    #현재 폴더 경로
+    app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME 
+
+    faces_db_path = app.config['UPLOAD_FOLDER']+"/faces"
+
+    if os.path.exists(faces_db_path):
+        os.remove(faces_db_path)
+        print("first upload _ faces 폴더 삭제함")
+
+    return 'complete first request',200
+
 
 
 # 이미지 추가 요청 
@@ -317,7 +334,6 @@ def upload_delete_image():
 
         else:
             'No file part', 400
-
 
 
 # 데이터베이스 이미지 요청
