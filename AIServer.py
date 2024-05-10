@@ -173,12 +173,9 @@ def upload_first():
 # 이미지 추가 요청 
 @app.route('/android/upload_add', methods=['POST'])
 def upload_image():
-    source = request_info(request)
-    FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
+    dbName,rowCount = request_info(request)
+    FOLDER_NAME = dbName # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
-
-    extract_face_list = [] #추출된 얼굴 이미지 경로를 담는 리스트
-    isFaceExit = False #추출된 얼굴 이미지가 있었는지 판단
 
     # DB이름과 동일한 폴더가 생성되어있는지 확인 필요        
     if not os.path.exists("./"+FOLDER_NAME):
@@ -188,16 +185,14 @@ def upload_image():
     # CSV폴더가 있는지 확인하고 없으면 CSV폴더 만들어주기 -> 함수로 뽑는 게 좋을 것 같음 
     try:
        csv_directory = os.path.join(app.config['UPLOAD_FOLDER'],"CSV")
-
        # csv 폴더가 존재하지 않는다면
        if not os.path.exists(csv_directory):
-           
            #폴더 생성
            os.makedirs(csv_directory) 
            print('CSV 폴더를 생성함')
     except Exception as e:
            print(f'폴더 생성 중 오류가 발생함 : {str(e)}')
-
+        
     #csv 파일 저장 경로, 파일 이름
     csv_file_path = os.path.join(csv_directory, FOLDER_NAME+".csv")
 
@@ -227,19 +222,13 @@ def upload_image():
             meta_run(filename,save_path,csv_file_path)
             
             # 이미지 분석 코드 호출(google vision, deepface)
-            extract_face_list = image_analysis(app.config['UPLOAD_FOLDER'],filename, save_path,csv_file_path)
+            #extract_face_list = image_analysis(app.config['UPLOAD_FOLDER'],filename, save_path,csv_file_path)
+            image_analysis(app.config['UPLOAD_FOLDER'],filename, save_path,csv_file_path)
             print("추출된 이미지 결과 받음")
-
-            #추출된 얼굴이 있을 경우, isExit
-            if extract_face_list:  
-                isFaceExit = True
-
-            # json 작성
-            response = make_image_json(extract_face_list,"add",isFaceExit)
-            return jsonify(response), 200
+            return 'complete uplaod add image', 200
                 
         else:
-            'No file part', 400
+            return 'No file part', 400
 
 
 @app.route('/android/upload_delete', methods=['POST'])
