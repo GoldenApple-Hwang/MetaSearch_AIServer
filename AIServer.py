@@ -8,6 +8,7 @@ import pandas as pd
 from image_analyze.extract_face import compareFace
 from image_analyze.GVapi import image_analysis
 from metadata.extract_metadata import meta_run
+from image_analyze.ntrans import translate_csv
 import serverConnectionHandler
 import csvHandler
 import csv
@@ -37,21 +38,27 @@ def synchronized(lock):
 def upload_finish():
     print("마지막 요청 들어옴")
 
-    # 폴더 이름 받아옴
-    source = request_info(request)
-    FOLDER_NAME = source # 만들어야하는 폴더 이름 ex) People
+    # 응답을 위한 배열
+    images_response = []
+
+    isFaceExit = False
+
+    # 폴더 이름 받아옴 # 데이터베이스 row 개수 받아옴
+    dbName,rowCount = request_info(request)
+    #print("rowCount = "+rowCount)
+    rowCount = int(rowCount)
+    FOLDER_NAME = dbName # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
+
+    # newFaces 폴더 경로
+    newFaces_directory = os.path.join(app.config['UPLOAD_FOLDER'],"newFaces")
+    print(f'마지막 요청에서의 newFaces 폴더 경로 :${newFaces_directory}')
 
     # csv 폴더 경로
     csv_directory = os.path.join(app.config['UPLOAD_FOLDER'],"CSV")
 
     # csv 파일 경로
     csv_file_path = os.path.join(csv_directory, FOLDER_NAME+".csv")
-
-    # 최종 csv파일 neo4j 전송
-    serverConnectionHandler.send_neo4jServer(csv_file_path)
-
-    # 사용자의 폴더 내 csv, faces, temp, gallery 모두 비움
 
     # faces 폴더 경로
     faces_directory = os.path.join(app.config['UPLOAD_FOLDER'],"faces")
@@ -61,20 +68,89 @@ def upload_finish():
 
     # gallery 폴더 경로
     gallery_directory = os.path.join(app.config['UPLOAD_FOLDER'],"gallery")
+
+    # 해당 경로의 파일이 존재하는지 파악 / 삭제 이미지 요청만 있다면 해당 폴더와는 관련이 없음
+    if os.path.exists(newFaces_directory):
+        isFaceExit = True
+        # 내부에 파일을 순회하며 csv 작성
+        for faceImage in os.listdir(newFaces_directory):
+            rowCount+=1 # 하나 증가
+            # csv에서 해당 faceImage 이름으로 된 곳을 다 변경함
+            newFaceName = f'인물{rowCount}'
+
+            #  (newfaces 폴더 내에서) 파일 이름 변경을 위해 전체 경로 지정 #faceImage는 old 이름 
+            newFaces_oldFilePath = os.path.join(newFaces_directory, faceImage)
+            newFaces_newFilePath = os.path.join(newFaces_directory, f'인물{rowCount}')
+
+            # (faces 폴더 내에서) 파일 이름 변경을 위해 전체 경로 지정
+            faces_oldFilePath = os.path.join(faces_directory,faceImage)
+            faces_newFilePath = os.path.join(faces_directory,f'인물{rowCount}')
+            
+            # 파일 이름 변경
+            os.rename(newFaces_oldFilePath, newFaces_newFilePath)
+
+            # 파일 이름 변경
+            os.rename(faces_oldFilePath, faces_newFilePath)
+
+            base_face_name = faceImage
+            # 파일 이름에서 확장자를 제거한 부분 => face_1
+            base_face_name = os.path.splitext(base_face_name)[0]
+
+            # csv에서 해당 이름 변경
+            csvHandler.replace_names_in_csv_pandas(csv_file_path,base_face_name,newFaceName)
+
+             # 해당 얼굴 이미지 파일 읽음
+            with open(newFaces_newFilePath, "rb") as img_file:
+                    image_bytes = img_file.read()
+                    encoded_image = base64.b64encode(image_bytes).decode('utf-8')  # 바이트 배열을 base64로 인코딩하여 문자열로 변환
+
+            images_response.append({
+                # 이미지 이름
+                'imageName': os.path.basename(newFaceName),
+
+                # 이미지 바이트 or None
+                'imageBytes': encoded_image,
+
+                # 얼굴 추출 여부
+                'isFaceExit' : isFaceExit
+            })
+    # 최종 csv 파일 번역
+    translate_csv(csv_file_path) 
+
+    # 최종 csv파일 neo4j 전송
+    serverConnectionHandler.send_neo4jServer(csv_file_path)
+
+    # 사용자의 폴더 내 csv, faces, temp, gallery 모두 비움
     
     # csv 폴더 내 파일 삭제
     delete_files(csv_directory)
 
     # faces 폴더 내 파일 다 삭제
-    delete_files(faces_directory)
+    #delete_files(faces_directory)
 
     # temp 폴더 내 파일 삭제
     delete_files(temp_directory)
 
     # gallery 폴더 내 파일 삭제
     delete_files(gallery_directory)
+
+    # newFaces 폴더를 삭제
+    if isFaceExit:
+        print("newFaces 폴더 삭제")
+    else: #추출된 얼굴이 없을 경우
+        images_response.append({
+                # 얼굴 추출 여부
+                'isFaceExit' : isFaceExit
+            })
+        
+    # 응답 메시지 작성
+    response = {
+            'images': images_response
+        }
+
     
-    return 'Database image upload 완료', 200 
+    return jsonify(response), 200
+
 
 
 # 이미지 추가 요청 
