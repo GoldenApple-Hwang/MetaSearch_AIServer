@@ -481,60 +481,7 @@ def delete_files(folder_directory):
                 # 파일을 삭제
                 os.unlink(file_path)  
 
-# json 작성 함수             
-def make_image_json(image_lists,actionType,isFaceExit): 
-    #actionType: add이면 이미지 경로가 저장되어있고, delete이면 바이트 배열이 필요없음 -> None 저장
-    # isExit: 추출된 얼굴이 존재하는지에 따라서 json파일을 다르게 보내야하므로 이를 구분하는 변수이다. true와 false로 구분된다.
 
-    # 이미지 관련 응답 작성 담는 리스트
-    images_response = [] 
-
-    #추출된 얼굴이 없는 경우
-    if not image_lists: 
-        images_response.append({
-                # 추출된 얼굴이 없으므로 false가 담김
-               'isFaceExit' : isFaceExit
-           })
-        
-        # 응답 response 생성
-        response = {
-            'images': images_response
-        }
-
-    else: # 추출된 얼굴이 있는 경우
-
-        # 추출된 얼굴 리스트 순회
-        for image_path in image_lists:
-
-            # 추가 요청이었다면
-            if actionType == 'add':
-                 
-                 # 해당 이미지 파일 읽음
-                 with open(image_path, "rb") as img_file:
-                     image_bytes = img_file.read()
-                     encoded_image = base64.b64encode(image_bytes).decode('utf-8')  # 바이트 배열을 base64로 인코딩하여 문자열로 변환
-            else:
-                 # 보내져야하는 이미지가 없다
-                 encoded_image = None
-                
-            images_response.append({
-                # 이미지 이름
-                'imageName': os.path.basename(image_path),
-
-                # 이미지 바이트 or None
-                'imageBytes': encoded_image,
-
-                # 얼굴 추출 여부
-                'isFaceExit' : isFaceExit
-            })
-
-        # 응답 response 생성
-        response = {
-            'images': images_response
-        }
-
-    # 응답 response 반환
-    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
