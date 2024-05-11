@@ -112,8 +112,14 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
         else:
             if obj not in recorded_values:
                 recorded_values.add(obj)
-                if obj in ('street', 'ice cream', 'cup', 'building', 'hat', 'cap', 'sports', 'glasses', 'sunset', 'sunrise', 'toy', 'sky', 'car'):
+                if obj in ('street', 'ice cream','building', 'hat', 'cap', 'sports','sunset', 'sunrise', 'toy', 'sky', 'car'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, obj, obj)
+                elif obj in ('cup', 'mug','teacup','coffee cup'):
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "컵", obj)
+                elif obj in ('glasses','sunglasses'):
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "안경", obj)
+                elif obj in ('ear','mouse'):
+                    write_to_cdv(CSV_FILE_PATH, IMAGE_APP_PATH, "신체부위", obj)
                 elif obj in ('photograph'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "인생네컷", obj)
                 elif obj in ('nail polish'):
@@ -121,10 +127,15 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                 elif obj in ('beach', 'ocean', 'sea'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "바다", obj)
                 else:
+                    found_specific_hypernym = False
                     for hypernym, label_type in specific_hypernyms.items():
                         if label_type == find_specific_hypernym(obj, hypernym):
                             write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, obj)
+                            found_specific_hypernym = True
                             break
+                        
+                    if not found_specific_hypernym:
+                        write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "기타", obj)
 
     # labels_detected 처리
     for label in labels_detected:
