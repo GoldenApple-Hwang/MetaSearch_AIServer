@@ -139,6 +139,7 @@ def upload_finish():
 
     # newFaces 폴더를 삭제
     if isFaceExit:
+        shutil.rmtree(newFaces_directory)
         print("newFaces 폴더 삭제")
     else: #추출된 얼굴이 없을 경우
         images_response.append({
@@ -312,8 +313,14 @@ def upload_delete_image():
             # search_name = os.path.splitext(search_name)[0]
             # print("검색하고자 하는 이미지 이름 : "+search_name)
 
+            # 파일 경로에서 파일 이름만 추출함
+            filename = os.path.basename(filename)
+
             # 해당 이미지 속성에 인물이 있다면 entity2를 추출한 리스트
-            person_face_list = csvHandler.return_entity2_if_relationship_is_person(csv_file_path, filename)
+            with lock:
+                person_face_list = csvHandler.return_entity2_if_relationship_is_person(csv_file_path, filename)
+                # person_face_list = csvHandler.delete_csv_file_info_and_return_entity2_if_relationship_is_person(csv_file_path, filename)
+
 
             # 추출된 얼굴이 있었다면
             if person_face_list:
