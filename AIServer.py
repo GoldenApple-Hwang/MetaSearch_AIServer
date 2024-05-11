@@ -17,6 +17,7 @@ from functools import wraps
 import json
 from circle2search import detect_and_draw_objects_in_radius
 import requests
+import shutil
 
 app = Flask(__name__)
 
@@ -166,7 +167,8 @@ def upload_first():
     faces_db_path = app.config['UPLOAD_FOLDER']+"/faces"
 
     if os.path.exists(faces_db_path):
-        os.remove(faces_db_path)
+        shutil.rmtree(faces_db_path)
+        
         print("first upload _ faces 폴더 삭제함")
 
     return 'complete first request',200
