@@ -70,21 +70,30 @@ def process_location_data(location, IMAGE_APP_PATH):
         def extract_component(component_type):
             return next((component['long_name'] for component in address_components if component_type in component['types']), '')
         
+        # 각 위치 정보 요소를 CSV 데이터에 추가
+        country = extract_component('country')
+        administrative_area_level_1 = extract_component('administrative_area_level_1')
+        locality = extract_component('locality')
+        postal_code = extract_component('postal_code')
+        route = extract_component('route')
+        premise = extract_component('premise')
+        formatted_address = location.raw.get('formatted_address', '')
+
         # 각 위치 정보 요소가 있을 경우에만 CSV 데이터에 추가
         if country:
-            csv_data.append((IMAGE_APP_PATH, 'Country', extract_component('country')))
+            csv_data.append((IMAGE_APP_PATH, '나라', extract_component('country')))
         if administrative_area_level_1:
-            csv_data.append((IMAGE_APP_PATH, 'State', extract_component('administrative_area_level_1')))
+            csv_data.append((IMAGE_APP_PATH, '도', extract_component('administrative_area_level_1')))
         if locality:
-            csv_data.append((IMAGE_APP_PATH, 'City', extract_component('locality')))
+            csv_data.append((IMAGE_APP_PATH, '도시', extract_component('locality')))
         if postal_code:
-            csv_data.append((IMAGE_APP_PATH, 'Postcode', extract_component('postal_code')))
+            csv_data.append((IMAGE_APP_PATH, '우편번호', extract_component('postal_code')))
         if route:
-            csv_data.append((IMAGE_APP_PATH, 'Road', extract_component('route')))
+            csv_data.append((IMAGE_APP_PATH, '도로', extract_component('route')))
         if premise:
-            csv_data.append((IMAGE_APP_PATH, 'Building', extract_component('premise')))
+            csv_data.append((IMAGE_APP_PATH, '건물', extract_component('premise')))
         if formatted_address:
-            csv_data.append((IMAGE_APP_PATH, 'Formatted Address', location.raw.get('formatted_address', '')))
+            csv_data.append((IMAGE_APP_PATH, '형식화된 주소', location.raw.get('formatted_address', '')))
 
     return csv_data
 
