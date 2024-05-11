@@ -44,7 +44,9 @@ def upload_finish():
     isFaceExit = False
 
     # 폴더 이름 받아옴 # 데이터베이스 row 개수 받아옴
-    dbName,rowCount = request_info(request)
+    dbName = request.form.get('dbName')
+    rowCount = request.form.get('rowCount')
+
     #print("rowCount = "+rowCount)
     rowCount = int(rowCount)
     FOLDER_NAME = dbName # 만들어야하는 폴더 이름 ex) People
@@ -153,7 +155,8 @@ def upload_finish():
 
 @app.route('/android/upload_first', methods=['POST'])
 def upload_first():
-    dbName,rowCount = request_info(request)
+    dbName = request.form.get('dbName')
+
     # 만들어야하는 폴더 이름 ex) People
     FOLDER_NAME = dbName
 
@@ -169,11 +172,44 @@ def upload_first():
     return 'complete first request',200
 
 
+@app.route('/android/upload_person_name', methods=['POST'])
+def upload_person_name():
+    dbName = request.form.get('dbName')
+    oldName = request.form.get('oldName')
+    newName = request.form.get('newName')
+
+    FOLDER_NAME = dbName
+
+    #현재 폴더 경로
+    app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME 
+
+    faces_directory = app.config['UPLOAD_FOLDER']+"/faces"
+
+    if os.path.exists(faces_directory):
+        # faces 폴더 내의 모든 파일 순회
+        for imageName in os.listdir(faces_directory):
+            print("imageName : "+imageName)
+
+            # 만약 oldName을 가진 사진이 있다면
+            if imageName == oldName:
+                # 새로운 이름으로 변경하도록 한다.
+                oldName_image_path = os.path.join(faces_directory, imageName)
+                newName_image_path = os.path.join(faces_directory, newName)
+
+                # 파일 이름 변경
+                os.rename(oldName_image_path,newName_image_path)
+
+                return 'complete change person name',200
+        
+        return 'No found name',400
+    
+    return "No faces folder",404
+
 
 # 이미지 추가 요청 
 @app.route('/android/upload_add', methods=['POST'])
 def upload_image():
-    dbName,rowCount = request_info(request)
+    dbName = request.form.get('dbName')
     FOLDER_NAME = dbName # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
 
@@ -234,7 +270,8 @@ def upload_image():
 @app.route('/android/upload_delete', methods=['POST'])
 #@synchronized(lock)
 def upload_delete_image():
-    dbName,rowCount = request_info(request)
+    dbName = request.form.get('dbName')
+
     FOLDER_NAME = dbName # 만들어야하는 폴더 이름 ex) People
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME #현재 폴더 경로
 
@@ -322,17 +359,17 @@ def upload_delete_image():
             return jsonify(response), 200 
 
         else:
-            'No file part', 400
+            'No file part', 404
 
 
 # 데이터베이스 이미지 요청
 @app.route('/android/upload_database', methods=['POST'])
 #@synchronized(lock)
 def upload_database_image():
-    source,rowCount = request_info(request)
+    dbName = request.form.get('dbName')
 
     # 만들어야하는 폴더 이름 ex) People
-    FOLDER_NAME = source 
+    FOLDER_NAME = dbName
 
     #현재 폴더 경로
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME 
@@ -354,7 +391,7 @@ def upload_database_image():
         else:
             return 'No database image provided', 400
     else:
-        return 'No file part', 400
+        return 'No file part', 404
     
 
 # 원 검색 요청
@@ -371,10 +408,10 @@ def upload_file():
     print(circles)  
 
     #DB 이름
-    source,rowCount = request_info(request)
+    dbName = request.form.get('dbName')
 
     # 만들어야하는 폴더 이름 ex) People 
-    FOLDER_NAME = source 
+    FOLDER_NAME = dbName
 
     #현재 폴더 경로
     app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME 
@@ -444,16 +481,6 @@ def process_circles(db_link,save_path, circles_data):
 # 파일 이름에서 확장자를 추출하고, 소문자로 변환하는 함수
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-#request 제공하는 info 추출
-def request_info(request): 
-    rowCount = None
-    #DB 이름
-    dbName = request.form.get('dbName') 
-    if request.form.get('rowCount'):
-        rowCount = request.form.get('rowCount')
-    return dbName,rowCount
 
 
 # db폴더 경로 내 gallery 폴더 생성 + 해당 이미지 저장    
