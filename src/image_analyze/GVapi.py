@@ -6,8 +6,9 @@ from nltk.corpus import wordnet as wn
 import shutil
 from image_analyze.extract_face import compareFace
 #from extract_face import compareFace
-from google.cloud import translate_v2 as translate
 import threading
+import re
+from konlpy.tag import Okt
 
 #csv 파일 작성 lock
 csv_lock = threading.Lock()
@@ -145,11 +146,44 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                         write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, label)
                         break
 
+    # 형태소 분석기 초기화
+    okt = Okt()
+
+    # 단어를 추출하는 함수 정의
+    def extract_words(text):
+        # 형태소 분석을 통해 명사만 추출
+        nouns = okt.nouns(text)
+        return nouns
+
+    #숫자를 추출하는 함수 정의
+    def extract_numbers(text):
+        #형태소 분석을 통해 숫자만 추출
+        numbers = re.findall(r'\d+', text) 
+        return numbers
+
+    #영단어를 추출하는 함수 정의
+    def extract_english_words(text):
+        # 정규표현식을 사용하여 영단어만 추출
+        english_words = re.findall(r'\b[A-Za-z]+\b', text)
+        return english_words                      
+
     # text_detected 처리
     if text_detected:
-        for i, line in enumerate(text_detected):
-            write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", line)
+        nouns = extract_words(text_detected[0])
+        numbers = extract_numbers(text_detected[0])
+        english_words = extract_english_words(text_detected[0])
+ 
+        if nouns: 
+            for word in nouns:
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)
+        if numbers:
+            for word in numbers:
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)
+        if english_words:
+            for word in english_words:
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)   
+
 
     print(f"Triple CSV updated at: {CSV_FILE_PATH}")
-    return extractFaceList
+    
 
