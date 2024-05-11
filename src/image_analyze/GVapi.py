@@ -143,8 +143,14 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
             continue
         if label not in recorded_values:
             recorded_values.add(label)
-            if label in ('street', 'ice cream', 'cup', 'building', 'hat', 'cap', 'sports', 'glasses', 'sunset', 'sunrise', 'toy', 'sky', 'car'):
+            if label in ('street', 'ice cream','building', 'hat', 'cap', 'sports','sunset', 'sunrise', 'toy', 'sky', 'car'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label, label)
+            elif label in ('cup', 'mug','teacup','coffee cup'):
+                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "컵", label)
+            elif label in ('glasses', 'sunglasses'):
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "안경", label)
+            elif label in ('ear','mouse'):
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "신체부위", label)
             elif label in ('photograph'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "인생네컷", label)
             elif label in ('nail polish'):
