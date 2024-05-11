@@ -102,7 +102,7 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
         'plant.n.01': 'plant',
         'footwear.n.01': 'footwear',
         'vegetable.n.01': 'vegetable',
-        'person.n.01': 'person'
+        'body_part.n.01': 'body_part'
     }
 
     # objects_detected 처리
