@@ -329,7 +329,7 @@ def upload_delete_image():
 @app.route('/android/upload_database', methods=['POST'])
 #@synchronized(lock)
 def upload_database_image():
-    source = request_info(request)
+    source,rowCount = request_info(request)
 
     # 만들어야하는 폴더 이름 ex) People
     FOLDER_NAME = source 
@@ -371,7 +371,7 @@ def upload_file():
     print(circles)  
 
     #DB 이름
-    source = request_info(request)
+    source,rowCount = request_info(request)
 
     # 만들어야하는 폴더 이름 ex) People 
     FOLDER_NAME = source 
