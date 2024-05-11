@@ -106,12 +106,14 @@ def extract_date_time_info(exif_data):
             if tag_name == 'DateTime':
                 date_time = value.split()
                 date = date_time[0].split(":")
+                time = date_time[1].split(":")
                 
                 date_time_info = {
                     'year': date[0],
                     'month': date[1],
                     'day': date[2],
                     'time': date_time[1]
+                    'hour': time[0]
                 }
     return date_time_info
 
@@ -213,7 +215,7 @@ def process_exif_data(exif_data, api_key, IMAGE_APP_PATH):
         csv_data.append((IMAGE_APP_PATH, '년', date_time_info['year']))
         csv_data.append((IMAGE_APP_PATH, '월', date_time_info['month']))
         csv_data.append((IMAGE_APP_PATH, '일', date_time_info['day']))
-        csv_data.append((IMAGE_APP_PATH, '시간', date_time_info['time']))
+        csv_data.append((IMAGE_APP_PATH, '시', date_time_info['hour']))
 
     # 플래시 정보
     flash_info = extract_flash_info(exif_data)
