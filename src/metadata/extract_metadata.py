@@ -176,15 +176,15 @@ def extract_resolution_info(exif_data):
 # 해상도에 따라 해상도 종류를 결정하는 함수
 def determine_resolution(x_resolution, y_resolution):
     if x_resolution <= 640 or y_resolution <= 480:
-        return {'resolution': 'SD'}
+        return {'resolution': '낮음'}
     elif 640 < x_resolution <= 1280 and 480 < y_resolution <= 720:
-        return {'resolution': 'HD'}
+        return {'resolution': '높음'}
     elif 1280 < x_resolution <= 1920 and 720 < y_resolution <= 1080:
-        return {'resolution': 'FHD'}
+        return {'resolution': '높음'}
     elif 1920 < x_resolution <= 2560 and 1080 < y_resolution <= 1440:
-        return {'resolution': 'QHD'}
+        return {'resolution': '높음'}
     elif 2560 < x_resolution <= 3840 and 1440 < y_resolution <= 2160:
-        return {'resolution': 'UHD'}
+        return {'resolution': '높음'}
     else:
         pass
 
