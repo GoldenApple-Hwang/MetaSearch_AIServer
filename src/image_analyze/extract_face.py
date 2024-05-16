@@ -1,6 +1,3 @@
-#구글 비전으로부터 ( 앱 내의 이미지 경로 / 서버 내 유효 DB 경로 / 서버 내 이미지 경로 / csv 파일 경로 )
-#얼굴 인식 -> 얼굴 분류 -> 표정 인식
-
 import csv
 import cv2
 import os
@@ -21,20 +18,18 @@ import threading
 lock = threading.Lock()
 
 # 얼굴 분석 lock
-face_lock = threading.Lock()
+#face_lock = threading.Lock()
 
 #얼굴 분석 csv 파일 작성
 def compareFace(db_link,app_image_link,db_image_link,csv_link,faces_detected): 
      # csv 파일에 작성해야하는 인물 리스트
      extract_person_name_list = []
 
-     # 해당 인물의 성별이 이미 존재하는지 확인하는 딕셔너리  
-     extract_person_sex_dict = {} 
+     # 해당 인물의 성별이 이미 존재하는지 확인하는 딕셔너리 -----
+     # 하나의 이미지에 성별이 겹치지 않도록 추출해야함
+     extract_person_sex_list = []
 
-     # 기존에 있는 얼굴과 동일하다고 나온 얼굴을 key, 기존의 얼굴을 value로 하는 변수
-     compare_extract_person_name = {}
-
-     #각각의 인물에 대해서 감정의 값을 저장 ex) [[1,happy],[1,netural],[2,happy]]
+     # 하나의 이미지에서 겹치지 않도록 감정을 추출함x
      extract_person_emotion_list = [] 
 
      # 표정 분석 해야하는 얼굴 이미지 리스트
@@ -44,7 +39,7 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link,faces_detected):
      extract_person='' 
 
      #새로 추출된 얼굴들을 저장하는 리스트 #반환되는 리스트
-     extractFaceList = [] 
+     #extractFaceList = [] 
 
      image_name = app_image_link # 분석되고 있는 이미지 이름
      image_name_exclude_extension = os.path.splitext(app_image_link)[0] #추출된 얼굴 이미지에 분석된 이미지의 이름을 추가하기 위한 변수
@@ -57,6 +52,9 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link,faces_detected):
      # 비교할 얼굴 이미지가 존재하는 폴더
      face_db_path = db_link+'/faces'
 
+     # 새로 추출한 얼굴 이미지 저장하는 폴더
+     new_face_db_path = db_link+'/newFaces'
+
      # 인식된 이미지 폴더
      temp_db_path = db_link+'/temp'
 
@@ -64,150 +62,183 @@ def compareFace(db_link,app_image_link,db_image_link,csv_link,faces_detected):
      if not os.path.exists(face_db_path):
 
         # faces 폴더 생성함
-        os.makedirs(face_db_path)
+        os.makedirs(face_db_path,exist_ok = True)
+        print("face 폴더 만듦")
 
-        # 만약 faces 폴더 새로 생성할 경우, test.jpg를 추가함
-        test_image_path = "./test.jpg"
-
-        # test.jpg를 faces 폴더에 복사함
-        shutil.copy(test_image_path,face_db_path)
-        print("face 폴더 만듦 + test 이미지 복사함")
+     if not os.path.exists(new_face_db_path):
+         
+         # newFaces 폴더 새로 생성함
+         os.makedirs(new_face_db_path,exist_ok=True)
+         print("newFaces 폴더 만듦")
     
      # temp 폴더가 없는지 확인
      if not os.path.exists(temp_db_path):
          
          # temp 폴더가 없으면 새로 만듦
-         os.makedirs(temp_db_path)
+         os.makedirs(temp_db_path,exist_ok= True)
          print("temp 폴더 만듦")
-          
+      
           
      # 서버로부터 저장된 이미지, 방금 Google Vision이 분석 후 face가 인식된 이미지
      compare_img_path = db_image_link 
 
      # 분석할 이미지 읽어드리기
      img = cv2.imread(compare_img_path) 
-
-     # 얼굴 인식 
-     # 얼굴 인식을 위해 dlib 필요
-     detector_hog = dlib.get_frontal_face_detector() 
-
-     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
-     # 얼굴 영역 인식
-     dlib_rects = detector_hog(img_rgb, 1) 
     
      # 인식된 얼굴의 개수만큼 반복
-     with face_lock:
-        for face in faces_detected:
-            vertices = [(vertex.x,vertex.y) for vertex in face.bouding_poly.vertices]
-            x1,y1 = vertices[0]
-            x2,y2 = vertices[2]
+     for face in faces_detected:
+            # vertices = [(vertex.x,vertex.y) for vertex in face.bounding_poly.vertices]
+            # x1,y1 = vertices[0]
+            # x2,y2 = vertices[2]
 
-            cropped = img[y1:y2,x1:x2]
+            # cropped = img[y1:y2,x1:x2]
 
-            #temp 폴더에 임시 저장
-            face_path = temp_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
+            # #temp 폴더에 임시 저장
+            # face_path = temp_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
+            vertices = [(vertex.x, vertex.y) for vertex in face.bounding_poly.vertices]
+            x1, y1 = vertices[0]
+            x2, y2 = vertices[2]
+
+            # 원래 영역의 너비와 높이 계산
+            width = x2 - x1
+            height = y2 - y1
+
+            # 0.4배 더 큰 영역 계산
+            expand_width = width * 0.4
+            expand_height = height * 0.4
+
+            # 확장된 영역의 좌표 계산
+            x1_expanded = max(x1 - expand_width // 2, 0) # 이미지 경계를 벗어나지 않도록 함
+            y1_expanded = max(y1 - expand_height // 2, 0)
+            x2_expanded = min(x2 + expand_width // 2, img.shape[1]) # img.shape[1]은 이미지의 너비
+            y2_expanded = min(y2 + expand_height // 2, img.shape[0]) # img.shape[0]은 이미지의 높이
+
+            # 확장된 영역으로 이미지 자르기
+            cropped = img[int(y1_expanded):int(y2_expanded), int(x1_expanded):int(x2_expanded)]
+
+            # temp 폴더에 임시 저장
+            face_path = temp_db_path + f'/face_{image_name_exclude_extension}_{current_time}.jpg'
+
 
             # 해당 face_path에 이미지 저장
-            cv2.imwrite(face_path, cropped) 
+            if cropped.size>0:
+                cv2.imwrite(face_path,cropped) # temp 경로에 자른 이미지 저장
+            else:
+                print("비어 있는 이미지는 저장하지 않습니다.") 
+            #cv2.imwrite(face_path, cropped) # temp 경로에 자른 이미지 저장
 
             # 자른 얼굴 얼굴 비교 시작 
             try:    
-                    # 얼굴 비교 / 저장된 얼굴 이미지와 얼굴이 저장된 폴더와 비교
-                    face_result = DeepFace.find(img_path=face_path, db_path=face_db_path, model_name='Facenet512',enforce_detection=False) 
+                    
+                    # 해당 faces 폴더가 비어있는지, 아닌지 확인
+                    # 만약 비어있다면, 해당 이미지를 분석하지 않고, 그냥 faces 폴더와 newFaces 폴더에 넣고 csv파일에 작성한다.
+                    files = os.listdir(face_db_path)
 
-                    # 만약 얼굴 비교 결과가 없으면 비교된 얼굴이 없다는 것 -> 얼굴 비교 폴더에 새롭게 저장함
-                    if (len(face_result)==0 or face_result[0].empty):
-                        print("얼굴을 찾지 못했습니다.")
-
+                    # faces 폴더 내에 아무것도 존재하지 않을 경우
+                    if len(files) == 0:
                         # faces 폴더로 이동
                         new_path = face_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
-
+                        
                         # 이미지 파일을 temp에서 faces 다른 폴더로 이동
                         shutil.move(face_path, new_path)
 
                         face_path = new_path
 
-                        # 분석해야하는 얼굴 리스트에 추가
-                        # 해당 이미지는 faces 폴더 내에 존재
-                        expression_faces.append(face_path)
+                        # newFaces 폴더 저장 경로
+                        new_face_path = new_face_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
 
-                        new_extract_person = face_path
+                        # newFaces 폴더에도 해당 얼굴 이미지 저장
+                        shutil.copyfile(face_path, new_face_path)
+                        print("newFaces 폴더에도 저장함")
+
+                        expression_faces.append(face_path)
 
                         extract_person = face_path
 
-                        print("뽑은 사람 이름 : "+ extract_person)
+                        print("처음으로 뽑은 사람 이름 : "+ extract_person)
+                    else:
 
-                    else: # 찾은 얼굴이 있는 경우
-                        print("얼굴을 찾았습니다.")
+                        # 얼굴 비교 / 저장된 얼굴 이미지와 얼굴이 저장된 폴더와 비교
+                        face_result = DeepFace.find(img_path=face_path, db_path=face_db_path, model_name='ArcFace',enforce_detection=False) 
 
-                        # 표정 분석 해야하는 얼굴 리스트에 추가
-                        # temp에 존재하는 얼굴 사진
-                        expression_faces.append(face_path)
+                        # 만약 얼굴 비교 결과가 없으면 비교된 얼굴이 없다는 것 -> 얼굴 비교 폴더에 새롭게 저장함
+                        if (len(face_result)==0 or face_result[0].empty):
+                            print("얼굴을 찾지 못했습니다.")
 
-                        # 찾은 얼굴에 대한 인물을 추출
-                        # 여러 개로 찾은 경우, 첫 번째의 얼굴로 결정
-                        #result[0]['identity'][0] -> 동일하다고 나온 이미지의 링크 전체를 알려줌 ex) ./faces/...
+                            # faces 폴더로 이동
+                            new_path = face_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
+                            
+                            # 이미지 파일을 temp에서 faces 다른 폴더로 이동
+                            shutil.move(face_path, new_path)
 
-                        extract_person = face_result[0]['identity'][0] # 사람 이미지 이름
+                            face_path = new_path
 
-                        # 키: 새로운 얼굴 이미지 이름, 값: 동일하다고 비교된 얼굴 이미지 이름
-                        compare_extract_person_name[face_path] = extract_person
-                        print("뽑은 사람 이름 : "+ extract_person)
+                            # newFaces 폴더 저장 경로
+                            new_face_path = new_face_db_path+f'/face_{image_name_exclude_extension}_{current_time}.jpg'
+
+                            # newFaces 폴더에도 해당 얼굴 이미지 저장
+                            shutil.copyfile(face_path, new_face_path)
+                            print("newFaces 폴더에도 저장함")
+
+                            # 분석해야하는 얼굴 리스트에 추가
+                            # 해당 이미지는 faces 폴더 내에 존재
+                            expression_faces.append(face_path)
+
+                            extract_person = face_path
+
+                            print("뽑은 사람 이름 : "+ extract_person)
+
+                        else: # 찾은 얼굴이 있는 경우
+                            print("얼굴을 찾았습니다.")
+
+                            # 표정 분석 해야하는 얼굴 리스트에 추가
+                            # temp에 존재하는 얼굴 사진
+                            expression_faces.append(face_path)
+
+                            # 찾은 얼굴에 대한 인물을 추출
+                            # 여러 개로 찾은 경우, 첫 번째의 얼굴로 결정
+                            #result[0]['identity'][0] -> 동일하다고 나온 이미지의 링크 전체를 알려줌 ex) ./faces/...
+
+                            extract_person = face_result[0]['identity'][0] # 사람 이미지 이름
+                            
+                            print("뽑은 사람 이름 : "+ extract_person)             
                     
-                    # 인물 추출 
-                    #os.path.basename(...) -> 사진 이름만 추출함 => face_1.jpg
-                    extract_person  = os.path.basename(extract_person)
-                    # 파일 이름에서 확장자를 제거한 부분 => face_1
-                    extract_person = os.path.splitext(extract_person)[0]
-                    
+                    # test.jpg가 뽑힐 수도 있으므로 조건을 달음
+                    if extract_person!= '':
+                        # 인물 추출 
+                        #os.path.basename(...) -> 사진 이름만 추출함 => face_1.jpg
+                        extract_person  = os.path.basename(extract_person)
+                        # 파일 이름에서 확장자를 제거한 부분 => face_1
+                        extract_person = os.path.splitext(extract_person)[0]
+                        
+                        # csv에 적을 이름 리스트이므로 중복되지 않게 처리함
+                        # 해당 리스트에 존재하지 않는 경우
+                        if not (extract_person in extract_person_name_list):
 
-                    # csv에 적을 이름 리스트이므로 중복되지 않게 처리함
-                    # 해당 리스트에 존재하지 않는 경우
-                    if not (extract_person in extract_person_name_list):
+                            # csv 파일에 인물 작성
+                            write_csv(csv_link,image_name,'인물',extract_person)
 
-                        # csv 파일에 인물 작성
-                        write_csv(csv_link,image_name,'인물',extract_person)
-
-                        # 추출된 얼굴 리스트에 포함
-                        extract_person_name_list.append(extract_person)
-
-                    # 처음 추출되는 얼굴을 반환할 추출 얼구 리스트에 포함
-                    if new_extract_person!='':
-                        extractFaceList.append(new_extract_person)    
+                            # 추출된 얼굴 리스트에 포함
+                            extract_person_name_list.append(extract_person)
 
             # 예외처리
             except ValueError as E:
                 print("deepface에서 얼굴 분석 못 함")
 
      
+     # 수정 필요 ( 필요없는 부분들이 있음 이를 수정할 필요가 있음 )
      # 표정 분석해야하는 얼굴 리스트가 비어있지 않는 경우 -> openCV에서 추출한 얼굴이 있는 경우
      if expression_faces:
 
         # 표정 분석 얼굴 리스트 순회
         for expression_face in expression_faces:
-
-            # 새롭게 뽑힌 얼굴일 경우, 비교되는 얼굴이 동일하고, 기존의 얼굴과 동일하다고 나온 얼굴은 표정 분석되는 얼굴과 csv에 적혀야하는 얼굴 이름이 다르므로 체크함
-            if expression_face in compare_extract_person_name.keys():
-                same_face_person_name = compare_extract_person_name[expression_face]
-            else:
-                # 비교할 만한 얼굴이 없는 경우, 해당 얼굴 이미지 이름이 '인물'이 됨
-                same_face_person_name = expression_face
-            
-            # 이미지 이름만 추출
-            same_face_person_name  = os.path.basename(same_face_person_name)
-                # 파일 이름에서 확장자를 제거한 부분 => face_1
-            same_face_person_name = os.path.splitext(same_face_person_name)[0]
-                
             # 표정 분석 함수 호출
-            compare_expression_Face(csv_link,expression_face,same_face_person_name,image_name,extract_person_emotion_list,extract_person_sex_dict)
-
-     #얼굴 추출 리스트를 반환함
-     return extractFaceList 
-
+            compare_expression_Face(csv_link,expression_face,image_name,extract_person_emotion_list,extract_person_sex_list)
 
 # 표정 분석 및 csv 파일 작성
-def compare_expression_Face(csv_link,expression_face,same_face_person_name,image_name,extract_person_emotion_list,extract_person_sex_dict): #csv 파일 경로, 추출된 사람의 얼굴 이미지 이름, 분석된 사진의 이름
-
+def compare_expression_Face(csv_link,expression_face,image_name,extract_person_emotion_list,extract_person_sex_list): #csv 파일 경로, 추출된 사람의 얼굴 이미지 이름, 분석된 사진의 이름
+        extract_emotion = '' # 추출한 감정
+        extract_gender = '' # 추출한 성별
         try:
             # 해당 얼굴 사진 표정 분석
             emotion_result = DeepFace.analyze(img_path=expression_face,
@@ -225,35 +256,14 @@ def compare_expression_Face(csv_link,expression_face,same_face_person_name,image
                 # 성별 추출
                 extract_gender = face_data['dominant_gender']
 
-                # 인종 추출
-                extract_race = face_data['dominant_race']
-
             # 해당 인물에 대해서 성별을 추출한 적 있는지 확인하는 함수 호출
-            isExist_Sex = check_if_sex_exist(same_face_person_name,extract_person_sex_dict)
+            # isExist_Sex = check_if_sex_exist(same_face_person_name,extract_person_sex_dict)
 
-            # 해당 인물에 대해서 성별을 추출한 적이 없다면
-            if not isExist_Sex:
-                # 인물 리스트에 존재하지 않는다는 것은 아직 트리플에 적히지 않았다는 것이므로 트리플에 새로 적어줌                   
-
-                #추출한 성별에 대해 csv 작성
+            if extract_gender not in extract_person_sex_list: #해당 성별이 이미지에서 추출된 적이 없으면 csv에 추출함
                 write_csv(csv_link,image_name,'성별',extract_gender)
-
-                # 딕셔너리에 해당 인물에 대한 성별 추가(인물의 이름 :key , 성별 : value)
-                extract_person_sex_dict[same_face_person_name] = extract_gender
-                    
-                #추출한 인종 csv에 작성
-                write_csv(csv_link,image_name,'인종',extract_race)
-
-                    
-            # 이미 해당 인물에게서 추출한 감정인지 체크함
-            isExist_emotion = check_if_emotion_exists(extract_person_emotion_list,same_face_person_name,extract_emotion)
-
-            # 만약 해당 감정이 존재하지 않는다면 추출해준다.
-            if not isExist_emotion:
-
-                # 추출된 감정 csv에 작성
+            if extract_emotion not in extract_person_emotion_list: #해당 감정이 이미지에서 추출된 적이 없으면 csv에 추출함
                 write_csv(csv_link,image_name,'감정',extract_emotion)
-            
+
         # 예외처리
         except ValueError as E:
             print("deepface에서 표정 분석 못 함")
@@ -262,14 +272,6 @@ def compare_expression_Face(csv_link,expression_face,same_face_person_name,image
 # 해당 인물에 대해서 같은 emotion이 이미 있는지 확인
 def check_if_emotion_exists(emotion_list, key, emotion):
     return any(item[1] == emotion for item in emotion_list if item[0] == key)
-
-
-# 해당 인물에 대해서 성별이 있는지 확인
-def check_if_sex_exist(extract_person_key,extract_person_sex_dict):
-    if extract_person_key in extract_person_sex_dict.keys():
-        return True
-    else:
-        return False
 
 
 #csv 파일에 작성
@@ -294,8 +296,7 @@ def write_csv(csv_link,entity1, relationship, entity2):
 #영어를 한국어로 반환함
 def change_en_to_kor(en):
     kor = {"netural" : "보통", "happy": "행복함", "surprise" : "놀람","angry":"화남","disgust":"역겨움","fear":"공포","sad":"슬픔", #감정
-               "indian":"인도인","black":"백인","white":"백인","middle eastern":"중동인","latino hispanic":"라틴계인","asian":"아시아인", #인종
-               "woman":"여자","man":"남자" #성별
+               "Woman":"여자","Man":"남자" #성별
                }.get(en,en) # 만약 이 중에 없는 값이 들어오면 이 값을 반환함
     
     # 한국어로 변형한 값 반환함
