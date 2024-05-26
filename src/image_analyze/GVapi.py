@@ -30,16 +30,14 @@ def detect_entities(image_content: bytes) -> List[str]:
     response_objects = client.object_localization(image=image)
     response_labels = client.label_detection(image=image, max_results=20)
     response_text = client.text_detection(image=image)
-    response_colors = client.image_properties(image=image)
     response_faces = client.face_detection(image=image)
     
     objects = [obj.name.lower() for obj in response_objects.localized_object_annotations if obj.name.lower() != "person"]
     labels = [label.description.lower() for label in response_labels.label_annotations]
     text = [text.description for text in response_text.text_annotations]
-    colors = [f"#{int(color.color.red):02X}{int(color.color.green):02X}{int(color.color.blue):02X}" for color in response_colors.image_properties_annotation.dominant_colors.colors[:3]]
     faces = response_faces.face_annotations
     
-    return objects, labels, text, colors, faces
+    return objects, labels, text, faces
 
 # WordNet 사용해서 원하는 상위어 찾기
 def find_specific_hypernym(word: str, target_hypernym: str) -> str:
@@ -77,8 +75,8 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
     # 이미지 파일 읽기
     image_content = read_image(IMAGE_FILE_PATH)
 
-    # 객체, 레이블, 텍스트, 색상, 얼굴 검출
-    objects_detected, labels_detected, text_detected, colors_detected, faces_detected = detect_entities(image_content)
+    # 객체, 레이블, 텍스트, 얼굴 검출
+    objects_detected, labels_detected, text_detected, faces_detected = detect_entities(image_content)
     
     #얼굴 인식이 있을 경우
     if faces_detected:
