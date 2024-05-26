@@ -47,9 +47,14 @@ def convert_dms_to_dd(gps_info):
             dd *= -1
         return dd
 
-    lat_dd = dms_to_dd(gps_info['latitude'], gps_info['latitude_ref'])
-    lon_dd = dms_to_dd(gps_info['longitude'], gps_info['longitude_ref'])
-    
+    if gps_info:
+        lat_dd = dms_to_dd(gps_info['latitude'], gps_info['latitude_ref'])
+        lon_dd = dms_to_dd(gps_info['longitude'], gps_info['longitude_ref'])
+        print("위치 변환함")
+    else:
+        lat_dd, lon_dd = None, None  
+
+    print(f"lat_dd: {lat_dd}, lon_dd: {lon_dd}")
     return lat_dd, lon_dd
 
 # 역 지오코딩을 통해 위치 정보를 추출하는 함수
