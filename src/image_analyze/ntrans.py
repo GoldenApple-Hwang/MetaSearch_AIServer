@@ -45,13 +45,27 @@ def translate_csv(CSV_PATH):
         else:
             # target_column 컬럼의 값이 영어인 경우에만 번역 수행
             if isinstance(row[target_column_name], str) and row[target_column_name].strip() != "" and row[target_column_name].isascii():
-            
+                #첫 글자를 대문자로 변경
+                row[target_column_name] = row[target_column_name].capitalize()
+                # 번역 실행
+                translated_text = papago_translation(row[target_column_name])
+                # 마침표 제거
+                translated_text = translated_text.rstrip('.')
+                # 공백 제거
+                translated_text = translated_text.replace(" ","")
                 # 번역 결과를 해당 컬럼에 할당
                 df.at[index, target_column_name] = translated_text
 
             # relationship 컬럼의 값이 영어인 경우에만 번역 수행
             if isinstance(row[relationship_column_name], str) and row[relationship_column_name].strip() != "" and row[relationship_column_name].isascii():
-              
+                #첫 글자를 대문자로 변경
+                row[relationship_column_name] = row[relationship_column_name].capitalize()
+                # 번역 실행
+                translated_relation = papago_translation(row[relationship_column_name])
+                # 마침표 제거
+                translated_relation = translated_relation.rstrip('.')
+                # 공백 제거
+                translated_relation = translated_relation.replace(" ","")
                 # 번역 결과를 해당 컬럼에 할당
                 df.at[index, relationship_column_name] = translated_relation
 
