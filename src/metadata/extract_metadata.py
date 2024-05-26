@@ -9,9 +9,13 @@ lock = threading.Lock()
 
 # 이미지에서 EXIF 데이터를 추출하는 함수
 def extract_exif_data(IMAGE_FILE_PATH):
-    image = Image.open(IMAGE_FILE_PATH)
-    exif_data = image._getexif()
-    return exif_data
+    try:
+        image = Image.open(IMAGE_FILE_PATH)
+        exif_data = image._getexif()
+        return exif_data
+    except Exception as e:
+        print(f"Error extracting EXIF data: {str(e)}")
+        return None 
 
 # EXIF 데이터를 통해 위치 정보를 추출하는 함수
 def extract_gps_info(exif_data):
