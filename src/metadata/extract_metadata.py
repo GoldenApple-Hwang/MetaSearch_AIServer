@@ -60,12 +60,16 @@ def convert_dms_to_dd(gps_info):
 # 역 지오코딩을 통해 위치 정보를 추출하는 함수
 def reverse_geocode(lat_dd, lon_dd, api_key):
     geolocator = GoogleV3(api_key=api_key)
-    try:
-        location = geolocator.reverse((lat_dd, lon_dd))
-        return location
-    except Exception as e:
-        print(f"Error during reverse geocoding: {str(e)}")
-        print(f"Failed to retrieve location data for coordinates: lat_dd={lat_dd}, lon_dd={lon_dd}")
+    if lat_dd is not None and lon_dd is not None:
+        try:
+            location = geolocator.reverse((lat_dd, lon_dd))
+            return location
+            print("위치 정보 추출 완료")
+        except Exception as e:
+            print(f"Error during reverse geocoding: {str(e)}")
+            print(f"Failed to retrieve location data for coordinates: lat_dd={lat_dd}, lon_dd={lon_dd}")
+            return None
+    else:
         return None
 
 # 위치 정보를 CSV 형식으로 변환하는 함수
