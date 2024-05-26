@@ -135,15 +135,18 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                 elif obj in ('beach', 'ocean', 'sea'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "바다", obj)
                 else:
-                    found_specific_hypernym = False
-                    for hypernym, label_type in specific_hypernyms.items():
-                        if label_type == find_specific_hypernym(obj, hypernym):
-                            write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, obj)
-                            found_specific_hypernym = True
-                            break
+                    if obj in specific_hypernyms.values():
+                        write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, obj, obj)
+                    else:
+                        found_specific_hypernym = False
+                        for hypernym, label_type in specific_hypernyms.items():
+                            if label_type == find_specific_hypernym(obj, hypernym):
+                                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, obj)
+                                found_specific_hypernym = True
+                                break
                         
-                    if not found_specific_hypernym:
-                        write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "기타", obj)
+                        if not found_specific_hypernym:
+                            write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "기타", obj)
 
     # labels_detected 처리
     for label in labels_detected:
@@ -174,10 +177,13 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
             elif label in ('beach', 'ocean', 'sea'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "바다", label)
             else:
-                for hypernym, label_type in specific_hypernyms.items():
-                    if label_type == find_specific_hypernym(label, hypernym):
-                        write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, label)
-                        break
+                if label in specific_hypernyms.values():
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label, label)
+                else:
+                    for hypernym, label_type in specific_hypernyms.items():
+                        if label_type == find_specific_hypernym(label, hypernym):
+                            write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, label)
+                            break
 
     # 형태소 분석기 초기화
     okt = Okt()
