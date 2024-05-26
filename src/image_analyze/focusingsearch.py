@@ -97,6 +97,15 @@ def detect_and_draw_objects_in_radius(db_link,path_to_image, normalized_x, norma
             if obj.score > max_confidence:
                 max_confidence = obj.score
                 best_obj = obj
+                
+                # 만약 사람이 추출되면 얼굴 분석으로 이동
+                if best_obj.name == "Person":
+                    print("이미지 경로 : "+path_to_image)
+                    print("person 나옴")
+                    extract_person = cut_face_image(db_link,path_to_image,poly_points)
+                    if extract_person != None:  
+                        best_obj.name = extract_person
+                    print("best_obj.name : "+best_obj.name)
 
                 print(f"객체 발견: {best_obj.name} (신뢰도: {best_obj.score})")
                 object_found = True
