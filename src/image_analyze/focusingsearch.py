@@ -8,6 +8,40 @@ import requests
 import json
 import piexif
 
+def correct_image_orientation(path_to_image):
+    try:
+        # 이미지 열기
+        image = Image.open(path_to_image)
+
+        # EXIF 데이터 가져오기
+        exif_dict = piexif.load(image.info.get('exif', b''))
+
+        # Orientation 태그 가져오기
+        orientation = exif_dict['0th'].get(piexif.ImageIFD.Orientation, 1)
+
+        # Orientation 값에 따라 이미지 회전
+        if orientation == 3:
+            print("3")
+            image = image.rotate(180, expand=True)
+        elif orientation == 6:
+            print("6")
+            image = image.rotate(270, expand=True)
+        elif orientation == 8:
+            print("8")
+            image = image.rotate(90, expand=True)
+
+        # EXIF 데이터에서 Orientation 태그 제거 (정상으로 설정)
+        exif_dict['0th'][piexif.ImageIFD.Orientation] = 1
+        exif_bytes = piexif.dump(exif_dict)
+
+        #사진 원본 저장
+        image.save(path_to_image, "jpeg", exif=exif_bytes)
+        print(f"Image orientation corrected and saved at: {path_to_image}")
+
+    except Exception as e:
+        image.save(path_to_image, "jpeg")
+        print("메타데이터 없음")
+
 #번역
 def papago_translation(text, source_lang='en', target_lang='ko'):
     url = "https://naveropenapi.apigw.ntruss.com/nmt/v1/translation"
@@ -31,6 +65,9 @@ def papago_translation(text, source_lang='en', target_lang='ko'):
 
 
 def detect_and_draw_objects_in_radius(db_link,path_to_image, normalized_x, normalized_y, normalized_radius): 
+    #이미지 교정 
+    correct_image_orientation(path_to_image)
+    
     #추출된 것들 
     dected_objects = []
     
