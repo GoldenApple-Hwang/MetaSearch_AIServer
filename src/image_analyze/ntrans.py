@@ -19,7 +19,27 @@ def papago_translation(text, source_lang='en', target_lang='ko'):
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 200:
         translated_text = response.json()['message']['result']['translatedText']
-       
+        # 번역 결과가 '사람인'인 경우 '사람'으로 반환
+        if translated_text.strip() == '사람인':
+            translated_text = '사람'
+        # 번역 결과가 '바디_부분'인 경우 '신체부위'로 반환
+        if translated_text.strip() == '바디_부분':
+            translated_text = '신체부위'
+        # 번역 결과가 '개'인 경우 '강아지'로 반환
+        if translated_text.strip() == '개':
+            translated_text = '강아지'
+        # 번역 결과가 '베이킹_굿즈'인 경우 '빵'으로 반환
+        if translated_text.strip() == '베이킹_굿즈':
+            translated_text = '빵'
+        # 번역 결과가 '마실것'인 경우 '음료'로 반환
+        if translated_text.strip() == '마실것':     
+            translated_text = '음료'
+        # 번역 결과가 '못'인 경우 '손톱'로 반환
+        if translated_text.strip() == '못':
+            translated_text = '손톱'
+        # 번역 결과가 '플라워'인 경우 '꽃'으로 반환
+        if translated_text.strip() == '플라워':
+            translated_text = '꽃'
         return translated_text
     else:
         return "번역에 실패했습니다. 오류 코드: {}".format(response.status_code)
