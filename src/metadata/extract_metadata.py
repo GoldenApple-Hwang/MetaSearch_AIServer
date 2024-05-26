@@ -24,13 +24,20 @@ def extract_gps_info(exif_data):
         for tag_id, value in exif_data.items():
             tag_name = TAGS.get(tag_id, tag_id)
             if tag_name == 'GPSInfo':
-                gps_info = {
-                    'latitude': value[2],
-                    'latitude_ref': value[1],
-                    'longitude': value[4],
-                    'longitude_ref': value[3]
-                }
-    return gps_info
+                try:
+                    gps_info = {
+                        'latitude': value[2],
+                        'latitude_ref': value[1],
+                        'longitude': value[4],
+                        'longitude_ref': value[3]
+                    }
+                except (KeyError, IndexError):
+                    print(f"Error extracting GPS info: {str(e)}")
+                    return None
+                    print("위치 정보 없음")
+    print(f"gps_info: {gps_info}")
+    return gps_info if gps_info else None
+
 
 # 위도와 경도 정보를 DMS 형식에서 DD 형식으로 변환하는 함수
 def convert_dms_to_dd(gps_info):
