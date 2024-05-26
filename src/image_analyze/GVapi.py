@@ -128,8 +128,6 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "안경", obj)
                 elif obj in ('ear','mouse'):
                     write_to_cdv(CSV_FILE_PATH, IMAGE_APP_PATH, "신체부위", obj)
-                elif obj in ('photograph'):
-                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "인생네컷", obj)
                 elif obj in ('nail polish'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "네일아트", obj)
                 elif obj in ('beach', 'ocean', 'sea'):
@@ -170,8 +168,6 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "안경", label)
             elif label in ('ear','mouse'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "신체부위", label)
-            elif label in ('photograph'):
-                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "인생네컷", label)
             elif label in ('nail polish'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "네일아트", label)
             elif label in ('beach', 'ocean', 'sea'):
@@ -224,21 +220,27 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
 
     # text_detected 처리
     if text_detected:
-        nouns = extract_words(text_detected[0])
-        numbers = extract_numbers(text_detected[0])
-        english_words = extract_english_words(text_detected[0])
+        text = text_detected[0]
+        # 키워드들이 하나라도 포함되어 있는지 확인
+        keywords = ["HARU FILM", "Mono mansion", "PHOTOGRAY", "PHOTOISM", "인생네컷", "PHOTOLAB","PHOTO SIGNATURE"]
+        for keyword in keywords:
+            if keyword in text:
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "인생네컷", "인생네컷")
+        else:
+            nouns = extract_words(text_detected[0])
+            numbers = extract_numbers(text_detected[0])
+            english_words = extract_english_words(text_detected[0])
  
-        if nouns: 
-            for word in nouns:
-                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)
-        if numbers:
-            for word in numbers:
-                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)
-        if english_words:
-            for word in english_words:
-                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)   
-
-
+            if nouns: 
+                for word in nouns:
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)
+            if numbers:
+                for word in numbers:
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)
+            if english_words:
+                for word in english_words:
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "텍스트", word)   
+   
     print(f"Triple CSV updated at: {CSV_FILE_PATH}")
     
 
