@@ -40,6 +40,13 @@ def papago_translation(text, source_lang='en', target_lang='ko'):
         # 번역 결과가 '플라워'인 경우 '꽃'으로 반환
         if translated_text.strip() == '플라워':
             translated_text = '꽃'
+        # 번역 결과가 '선셋'인 경우 '일몰'로 반환
+        if translated_text.strip() == '선셋':
+            translated_text = '일몰'
+        # 번역 결과가 '선라이즈'인 경우 '일출'로 반환
+        if translated_text.strip() == '선라이즈':
+            translated_text = '일출'
+
         return translated_text
     else:
         return "번역에 실패했습니다. 오류 코드: {}".format(response.status_code)
