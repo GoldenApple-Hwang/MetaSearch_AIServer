@@ -100,7 +100,9 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
         'plant.n.01': 'plant',
         'footwear.n.01': 'footwear',
         'vegetable.n.01': 'vegetable',
-        'body_part.n.01': 'body_part'
+        'body_part.n.01': 'body_part',
+        'flower.n.01': 'flower',
+        'game.n.01': 'game'
     }
 
     # objects_detected 처리
