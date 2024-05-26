@@ -86,6 +86,8 @@ def process_location_data(location, IMAGE_APP_PATH):
         country = extract_component('country')
         administrative_area_level_1 = extract_component('administrative_area_level_1')
         locality = extract_component('locality')
+        sublocality = extract_component('sublocality')
+        sublocality_level_1 = extract_component('sublocality_level_1')
         postal_code = extract_component('postal_code')
         route = extract_component('route')
         premise = extract_component('premise')
@@ -98,6 +100,10 @@ def process_location_data(location, IMAGE_APP_PATH):
             csv_data.append((IMAGE_APP_PATH, '도', extract_component('administrative_area_level_1')))
         if locality:
             csv_data.append((IMAGE_APP_PATH, '도시', extract_component('locality')))
+        if sublocality_level_1:
+            csv_data.append((IMAGE_APP_PATH, '구', extract_component('sublocality_level_1')))
+        if sublocality:
+            csv_data.append((IMAGE_APP_PATH, '동', extract_component('sublocality')))
         if postal_code:
             csv_data.append((IMAGE_APP_PATH, '우편번호', extract_component('postal_code')))
         if route:
