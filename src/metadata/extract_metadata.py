@@ -243,7 +243,8 @@ def process_exif_data(exif_data, api_key, IMAGE_APP_PATH):
     # 방향 정보
     orientation_info = extract_orientation_info(exif_data)
     if orientation_info:
-        csv_data.append((IMAGE_APP_PATH, '방향', orientation_info['orientation']))
+        #csv_data.append((IMAGE_APP_PATH, '방향', orientation_info['orientation']))
+        pass
     
     # 해상도 정보
     resolution_info = extract_resolution_info(exif_data)
@@ -262,7 +263,7 @@ def write_csv_data(CSV_FILE_PATH, csv_data):
 # 전체 코드를 실행하는 함수
 def meta_run(IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH):
     # Google Maps Geocoding API 키
-    api_key = 'AIzaSyAlpcJJZZfYKRt_ESF9KMyKFeEsDmaepTo'
+    api_key = 'GoogleVisionAPIKEY'
     
     # 이미지 파일에서 EXIF 데이터 추출
     exif_data = extract_exif_data(IMAGE_FILE_PATH)
