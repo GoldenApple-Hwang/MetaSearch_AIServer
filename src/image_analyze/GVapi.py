@@ -114,6 +114,14 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                 recorded_values.add(obj)
                 if obj in ('street', 'ice cream','building', 'hat', 'cap', 'sports','sunset', 'sunrise', 'toy', 'sky', 'car'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, obj, obj)
+                elif obj in ('grass'):
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "식물", obj)
+                elif obj in ('top'):
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "옷", "상의")
+                elif obj in ('shoe', 'footwear'):
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "신발", obj)
+                elif obj in ('dish', 'plate','bowl'):
+                    write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "식기", obj)
                 elif obj in ('cup', 'mug','teacup','coffee cup'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "컵", obj)
                 elif obj in ('glasses','sunglasses'):
@@ -145,6 +153,14 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
             recorded_values.add(label)
             if label in ('street', 'ice cream','building', 'hat', 'cap', 'sports','sunset', 'sunrise', 'toy', 'sky', 'car'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label, label)
+            elif label in ('grass'):
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "식물", label)
+            elif label in ('top'):
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "옷", "상의") 
+            elif label in ('shoe', 'footwear'):
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH,"신발", label)
+            elif label in ('dish', 'plate','bowl'):
+                write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "식기", label)
             elif label in ('cup', 'mug','teacup','coffee cup'):
                  write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "컵", label)
             elif label in ('glasses', 'sunglasses'):
