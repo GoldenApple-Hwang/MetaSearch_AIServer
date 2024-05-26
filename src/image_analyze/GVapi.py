@@ -126,7 +126,7 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "컵", obj)
                 elif obj in ('glasses','sunglasses'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "안경", obj)
-                elif obj in ('ear','mouse'):
+                elif obj in ('ear','mouth'):
                     write_to_cdv(CSV_FILE_PATH, IMAGE_APP_PATH, "신체부위", obj)
                 elif obj in ('nail polish'):
                     write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "네일아트", obj)
@@ -166,7 +166,7 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                  write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "컵", label)
             elif label in ('glasses', 'sunglasses'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "안경", label)
-            elif label in ('ear','mouse'):
+            elif label in ('ear','mouth'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "신체부위", label)
             elif label in ('nail polish'):
                 write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, "네일아트", label)
