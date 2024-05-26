@@ -185,26 +185,42 @@ def image_analysis(CSV_DIRECTORY, IMAGE_APP_PATH, IMAGE_FILE_PATH, CSV_FILE_PATH
                             write_to_csv(CSV_FILE_PATH, IMAGE_APP_PATH, label_type, label)
                             break
 
-    # 형태소 분석기 초기화
-    okt = Okt()
+    try:
+        # 형태소 분석기 초기화
+        okt = Okt()
+  
+    except Exception as e:
+        #형태소 분석기 초기화 중 오류 발생 시. 오류 메시지 추출 후 무시
+        print("Error initializing Okt:", e)
+        okt = None 
 
     # 단어를 추출하는 함수 정의
     def extract_words(text):
-        # 형태소 분석을 통해 명사만 추출
-        nouns = okt.nouns(text)
-        return nouns
+        if okt:
+            # 형태소 분석을 통해 명사만 추출
+            nouns = okt.nouns(text)
+            return nouns
+        else:
+            return []
 
     #숫자를 추출하는 함수 정의
     def extract_numbers(text):
-        #형태소 분석을 통해 숫자만 추출
-        numbers = re.findall(r'\d+', text) 
-        return numbers
+        if okt: 
+            #형태소 분석을 통해 숫자만 추출
+            numbers = re.findall(r'\d+', text) 
+            return numbers
+        else:
+            return []
 
     #영단어를 추출하는 함수 정의
     def extract_english_words(text):
-        # 정규표현식을 사용하여 영단어만 추출
-        english_words = re.findall(r'\b[A-Za-z]+\b', text)
-        return english_words                      
+        if okt:
+            # 정규표현식을 사용하여 영단어만 추출
+            english_words = re.findall(r'\b[A-Za-z]+\b', text)
+            return english_words 
+        else:
+            return []
+                      
 
     # text_detected 처리
     if text_detected:
