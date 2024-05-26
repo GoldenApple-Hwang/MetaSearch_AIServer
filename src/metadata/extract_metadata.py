@@ -7,14 +7,6 @@ import threading
 #Lock 객체 정의
 lock = threading.Lock()
 
-# 번역 함수
-def translate_text(text, target_language='ko'):
-    from google.cloud import translate_v2 as translate   
-    client = translate.Client()
-    result = client.translate(text, target_language=target_language)
-    translated_text = result['translatedText']
-    return translated_text
-
 # 이미지에서 EXIF 데이터를 추출하는 함수
 def extract_exif_data(IMAGE_FILE_PATH):
     image = Image.open(IMAGE_FILE_PATH)
