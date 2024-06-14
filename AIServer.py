@@ -15,9 +15,11 @@ import csv
 import threading
 from functools import wraps
 import json
-from circle2search import detect_and_draw_objects_in_radius
+from image_analyze.focusingsearch import detect_and_draw_objects_in_radius
 import requests
 import shutil
+import re
+import time
 
 app = Flask(__name__)
 
@@ -47,6 +49,7 @@ def upload_finish():
     # 폴더 이름 받아옴 # 데이터베이스 row 개수 받아옴
     dbName = request.form.get('dbName')
     rowCount = request.form.get('rowCount')
+    isAdd = request.form.get('isAdd')
 
     #print("rowCount = "+rowCount)
     rowCount = int(rowCount)
@@ -87,7 +90,9 @@ def upload_finish():
 
             # (faces 폴더 내에서) 파일 이름 변경을 위해 전체 경로 지정
             faces_oldFilePath = os.path.join(faces_directory,faceImage)
-            faces_newFilePath = os.path.join(faces_directory,f'인물{rowCount}')
+            #faces_newFilePath = os.path.join(faces_directory,f'인물{rowCount}.jpg') #원래 '인물1'이었다면 '인물1.jpg'로 저장하도록 변경함
+            faces_newFilePath = os.path.join(faces_directory,f'person{rowCount}.jpg') #원래 '인물1'이었다면 'person1.jpg'로 저장하도록 변경함
+
             
             # # 파일 이름 변경
             # os.rename(newFaces_oldFilePath, newFaces_newFilePath)
@@ -109,7 +114,7 @@ def upload_finish():
 
             images_response.append({
                 # 이미지 이름
-                'imageName': os.path.basename(newFaceName),
+                'imageName': newFaceName, # ex) 클라이언트에게 인물1이라는 이름을 보냄
 
                 # 이미지 바이트 or None
                 'imageBytes': encoded_image,
@@ -118,6 +123,7 @@ def upload_finish():
                 'isFaceExit' : isFaceExit
             })
     # 최종 csv 파일 번역
+   # if isAdd == "true":
     translate_csv(csv_file_path) 
 
     # 최종 csv파일 neo4j 전송
@@ -129,7 +135,7 @@ def upload_finish():
     delete_files(csv_directory)
 
     # faces 폴더 내 파일 다 삭제
-    #delete_files(faces_directory)
+    delete_files(faces_directory)
 
     # temp 폴더 내 파일 삭제
     delete_files(temp_directory)
@@ -137,11 +143,13 @@ def upload_finish():
     # gallery 폴더 내 파일 삭제
     delete_files(gallery_directory)
 
+    delete_files(newFaces_directory)
+    print("newFaces 폴더 삭제함")
+
+
     # newFaces 폴더를 삭제
-    if isFaceExit:
-        shutil.rmtree(newFaces_directory)
-        print("newFaces 폴더 삭제")
-    else: #추출된 얼굴이 없을 경우
+    if not isFaceExit:
+        # 추출된 얼굴이 없을 경우
         images_response.append({
                 # 얼굴 추출 여부
                 'isFaceExit' : isFaceExit
@@ -173,40 +181,6 @@ def upload_first():
         print("first upload _ faces 폴더 삭제함")
 
     return 'complete first request',200
-
-
-@app.route('/android/upload_person_name', methods=['POST'])
-def upload_person_name():
-    dbName = request.form.get('dbName')
-    oldName = request.form.get('oldName')
-    newName = request.form.get('newName')
-
-    FOLDER_NAME = dbName
-
-    #현재 폴더 경로
-    app.config['UPLOAD_FOLDER'] = "./"+FOLDER_NAME 
-
-    faces_directory = app.config['UPLOAD_FOLDER']+"/faces"
-
-    if os.path.exists(faces_directory):
-        # faces 폴더 내의 모든 파일 순회
-        for imageName in os.listdir(faces_directory):
-            print("imageName : "+imageName)
-
-            # 만약 oldName을 가진 사진이 있다면
-            if imageName == oldName:
-                # 새로운 이름으로 변경하도록 한다.
-                oldName_image_path = os.path.join(faces_directory, imageName)
-                newName_image_path = os.path.join(faces_directory, newName)
-
-                # 파일 이름 변경
-                os.rename(oldName_image_path,newName_image_path)
-
-                return 'complete change person name',200
-        
-        return 'No found name',400
-    
-    return "No faces folder",404
 
 
 # 이미지 추가 요청 
@@ -301,11 +275,15 @@ def upload_delete_image():
         file = request.files['deleteImage']
 
         if file:
-            filename = file.filename # 파일 이름 보안 검증
-            print("deleteImage에서의 filename : "+filename)
+            # filename = file.filename+'.jpg' # 파일 이름 보안 검증 # 클라이언트에서 인물1로 들어오므로 인물1.jpg로 변경하여 저장함
+            # print("deleteImage에서의 filename : "+filename)
+            filename = file.filename
+
+            # 해당 이미지 이름이 들어간 데이터를 csv 파일에서 삭제함
+            
 
             #얼굴 이미지가 저장되어있는 폴더
-            face_directory = os.path.join(app.config['UPLOAD_FOLDER'],"faces") 
+            # face_directory = os.path.join(app.config['UPLOAD_FOLDER'],"faces") 
 
             # #추출된 얼굴 이미지에 분석된 이미지의 이름을 추가하기 위한 변수
             # # 파일 이름에서 확장자를 제거한 부분 => face_1      
@@ -316,56 +294,57 @@ def upload_delete_image():
             # 파일 경로에서 파일 이름만 추출함
             filename = os.path.basename(filename)
 
-            # 해당 이미지 속성에 인물이 있다면 entity2를 추출한 리스트
-            with lock:
-                person_face_list = csvHandler.return_entity2_if_relationship_is_person(csv_file_path, filename)
-                # person_face_list = csvHandler.delete_csv_file_info_and_return_entity2_if_relationship_is_person(csv_file_path, filename)
-
-
-            # 추출된 얼굴이 있었다면
-            if person_face_list:
-                isFaceExit = True
-                if os.path.exists(face_directory):
-                # faces 폴더 내의 모든 파일 순회
-                    for imageName in os.listdir(face_directory):
-                        print("imageName : "+imageName)
-
-                        # 찾고자 하는 이미지의 경로
-                        image_path = os.path.join(face_directory, imageName)
-                        print("iamge_path :"+image_path)
-
-                        # 얼굴 이미지가 entity2 추출한 리스트의 이름 내에 있다면
-                        if imageName in person_face_list:
-
-                            # 추출 얼굴 리스트에 삭제해야하는 얼굴 이미지 이름 추가
-                            #extract_face_list.append(imageName) 
-
-                            images_response.append({
-                                # 이미지 이름
-                                'imageName': imageName,
-
-                                # 얼굴 추출 여부
-                                'isFaceExit' : isFaceExit
-                            })
-                            
-                            # 이미지 삭제
-                            os.remove(image_path)
-                            print(f"Found '{imageName}'")   
-                    
-            # 해당 이름이 들어간 데이터를 csv 파일에서 삭제함
             with lock:
                 csvHandler.delete_csv_file_info(csv_file_path,filename) 
+
+            # 해당 이미지 속성에 인물이 있다면 entity2를 추출한 리스트
+            # with lock:
+            #     person_face_list = csvHandler.return_entity2_if_relationship_is_person(csv_file_path, filename)
+            #     # person_face_list = csvHandler.delete_csv_file_info_and_return_entity2_if_relationship_is_person(csv_file_path, filename)
+
+
+            # # 추출된 얼굴이 있었다면
+            # if person_face_list:
+            #     isFaceExit = True
+            #     if os.path.exists(face_directory):
+            #     # faces 폴더 내의 모든 파일 순회
+            #         for imageName in os.listdir(face_directory):
+            #             print("imageName : "+imageName)
+
+            #             # 찾고자 하는 이미지의 경로
+            #             image_path = os.path.join(face_directory, imageName)
+            #             print("iamge_path :"+image_path)
+
+            #             # 얼굴 이미지가 entity2 추출한 리스트의 이름 내에 있다면
+            #             if imageName in person_face_list:
+
+            #                 # 추출 얼굴 리스트에 삭제해야하는 얼굴 이미지 이름 추가
+            #                 #extract_face_list.append(imageName) 
+
+            #                 images_response.append({
+            #                     # 이미지 이름
+            #                     'imageName': imageName,
+
+            #                     # 얼굴 추출 여부
+            #                     'isFaceExit' : isFaceExit
+            #                 })
+                            
+            #                 # 이미지 삭제
+            #                 os.remove(image_path)
+            #                 print(f"Found '{imageName}'")   
+                    
+            
             
             # 응답을 위한 json 작성
             #response = make_image_json(extract_face_list,"delete",isFaceExit)
 
             # 응답 response 생성
-            response = {
-                'images': images_response
-            }
+            # response = {
+            #     'images': images_response
+            # }
 
             #json 응답 전송
-            return jsonify(response), 200 
+            return "complete delete image", 200 
 
         else:
             'No file part', 404
@@ -392,7 +371,10 @@ def upload_database_image():
         # 파일이 존재하는지 확인
         if file: 
             filename = file.filename
-
+            # 인물1로 들어옴 -> person1.jpg로 변경해야함
+            # 숫자만 출력함
+            
+    
             # 파일 저장 경로 설정
             save_path = make_save_path_folder(file,app.config['UPLOAD_FOLDER'], "faces", filename)
      
@@ -445,7 +427,7 @@ def upload_file():
 
         # 이미지 파일이 저장된 경로
         save_path = make_save_path_folder(file,app.config['UPLOAD_FOLDER'], "search", filename)
-
+ 
         # 원 정보 추출
         circles_data = json.loads(circles)
 
@@ -480,7 +462,11 @@ def process_circles(db_link,save_path, circles_data):
             if object.name:
 
                 # 객체 이름 리스트에 담음
-                object_names_list.append(object.name)   
+                object_names_list.append(object.name)                  
+        else:
+            object_names_list.append("")  
+
+
 
     # 추출된 객체 이름이 담겨진 리스트 반환  
     return object_names_list
@@ -493,8 +479,12 @@ def allowed_file(filename):
 
 
 # db폴더 경로 내 gallery 폴더 생성 + 해당 이미지 저장    
-def make_save_path_folder(file,folderPath, folderName, filename):
-      save_path = os.path.join(folderPath,folderName , filename)
+def make_save_path_folder(file,folderPath, folderName,filename ):
+      if folderName == "faces": # 얼굴에 저장할 사진이라면
+          number = re.sub(r'\D', '', filename)
+          save_path = os.path.join(folderPath,folderName , "person"+number+".jpg") #person1.jpg 로 이름 변경하여 faces에 저장
+      else:
+          save_path = os.path.join(folderPath,folderName , filename) #person1.jpg 로 이름 변경하여 faces에 저장
 
       # 필요한 경우 폴더 생성
       os.makedirs(os.path.dirname(save_path), exist_ok=True)
